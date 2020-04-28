@@ -2,6 +2,7 @@
 参考:
 - <<深入理解程序设计使用Linux汇编语言>>
 - [Linux Assembly Tutorial Step-by-Step Guide](https://montcs.bloomu.edu/Information/LowLevel/Assembly/assembly-tutorial.html)
+- [Assembly Programming Tutorial for nasm with intel format](https://www.tutorialspoint.com/assembly_programming/index.htm)
 
 os: linux x86_64
 
