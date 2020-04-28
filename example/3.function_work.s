@@ -41,6 +41,6 @@ power:
         jmp power_loop_start
 
     end_power:
-        popq %rbp # 将rbp重置为上一个栈帧的rbp
+        popq %rbp # 将rbp重置为上一个栈帧的rbp. 因为没有修改rsp因此不用执行`movq %rbp. %rsp`
         ret
 

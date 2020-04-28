@@ -2,6 +2,16 @@
 参考:
 - x86/x86_64 : [<<Intel® 64 and IA-32 ArchitecturesSoftware Developer’s ManualVolume 2>>的Chapter 3~5](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf)
 
+## add[L]
+相加
+
+`addq $16, %rsp` => rsp+=16
+
+## call
+函数调用
+
+`call ${function_name}`
+
 ## comp[L]
 参考:
 - [Intel Instruction Set (gas) # CMP](/misc/doc/Intel_Instruction_Set_gas.pdf)
@@ -18,10 +28,20 @@
 
 `decq %rcx`, rcx--
 
+## inc[L]
+递增
+
+`incl %rdi` => rdi++
+
 ## imul[L]
 相乘
 
-`imull %rbx, %rax` = rax*=rbx
+`imull %rbx, %rax` => rax*=rbx
+
+## mov[L]
+赋值
+
+`movq %rax, %rbx` => rbx = rax
 
 ## jmp
 无条件跳转
