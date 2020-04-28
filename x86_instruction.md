@@ -4,7 +4,7 @@
 
 ## comp
 参考:
-- [Intel Instruction Set (gas) # CMP](https://www.cs.umb.edu/~cheungr/cs341/Instructions.pdf)
+- [Intel Instruction Set (gas) # CMP](/misc/doc/Intel_Instruction_Set_gas.pdf)
 
 比较结果的处理, 即有条件跳转:
 - je : 相等跳转
