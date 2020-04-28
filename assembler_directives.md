@@ -27,3 +27,8 @@
 
 - `.section .data` : 数据段的开始标识. 数据段中保存了程序数据所需的所有内存空间.
 - `.section .text` : 本地段的开始标识. 文本段保存程序指令.
+
+## `.type`
+`.type name,@type` : 将符号name的type属性设为type, 其中type可以是function或object.
+
+`.type`会告诉ld将符号name作为function或object.
