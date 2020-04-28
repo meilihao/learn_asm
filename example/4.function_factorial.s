@@ -29,7 +29,7 @@ factorial:
     imulq %rbx, %rax
 
     end_factorial:
-        movq %rbp, %rsp
+        movq %rbp, %rsp # 将rsp重置为rbp. 因为修改了rsp
         popq %rbp
         ret
     
