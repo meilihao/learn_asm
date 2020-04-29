@@ -48,7 +48,7 @@ xor  ax, ax          ; eax = 0x11110000 (works, only low 16 bits cleared)
 # 但是，一旦涉及到64位内容，事情似乎就变得很尴尬：
 
 mov  rax, 0x1111222233334444 ;           rax = 0x1111222233334444
-mov  eax, 0x55556666         ; actual:   rax = 0x0000000055556666 # rax的高32bit被重置了
+mov  eax, 0x55556666         ; actual:   rax = 0x0000000055556666 # rax的高32bit被重置了, 这是因为[对无序执行的额外依赖性不同导致](https://riptutorial.com/zh-CN/x86/example/6975/64%E4%BD%8D%E5%AF%84%E5%AD%98%E5%99%A8)
                              ; expected: rax = 0x1111222255556666
                              ; upper 32 bits seem to be lost!
 mov  rax, 0x1111222233334444 ;           rax = 0x1111222233334444
