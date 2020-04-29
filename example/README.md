@@ -3,5 +3,6 @@
 2. find_max.s : 寻找数组中的最大值
 3. function_work.s : 函数如何工作
 4. function_factorial.s : 递归函数, 求n!
+5. rw_file.s : 读取一个文件并将其中的所有大写字母转成小写再输出到其他文件
 
 > 文件后缀是att的是AT&T语法, 没有则默认是Intel语法. example初始时使用了AT&T语法, 以后仅提供Intel语法. att语法版本可用`objdump -d program_name`获取.
