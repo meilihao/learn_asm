@@ -24,6 +24,13 @@
 
 > `l`是`local`
 
+## `.equ`
+`.equ ${symbol}, ${value}`
+
+让其左边的标识符可代表右边的表达式, 并不会给标识符分配内存. 标识符不能重名, 也不能重新定义. 类似于c的`#define ...`
+
+`.equ BaseOfStack, 0x7c00`
+
 ## `.global`
 `.global xxx`表示汇编程序不应在汇编之后废弃该符号, 因为ld(连接器)需要它.
 
