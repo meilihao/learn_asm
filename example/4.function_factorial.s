@@ -9,10 +9,10 @@ _start:
     push 4
     call factorial
     add rsp, 8 # 撤销栈帧
-    mov rbx, rax
+    mov rdi, rax
 
-    mov rax, 1
-    int 0x80
+    mov rax, 0x3c
+    syscall
 
 .type factorial @function
 factorial:

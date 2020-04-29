@@ -26,6 +26,36 @@ AT&T语法是一种相当老的语法，由GAS和一些老式汇编器使用；N
 ## 指令集
 - x86/x86_64 : [<<Intel® 64 and IA-32 ArchitecturesSoftware Developer’s ManualVolume 2>>的Chapter 3~5](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf)
 
+## 64 bit汇编
+1. 用户模式的系统调用依次传递的寄存器为: rdi,rsi,rdx,rcx,r8和r9
+1. 内核接口的系统调用一次传递的寄存器为: rdi,rsi,rdx,r10,r8和r9. 注意这里和用户模式的系统调用只有第4个寄存器不同，其他都相同
+1. 系统调用通过syscall指令进入，不像32位下的汇编使用的是int 0x80指令；
+1. 系统调用号放在rax寄存器里
+1. 系统调用限制最多6个参数
+1. 系统调用的返回结果，也就是syscall指令的返回放在rax寄存器中
+1. 只有整形值和内存型的值可以传递给内核
+
+### Linux 32位系统调用和64位系统调用的区别
+- 系统调用号(syscall)不同
+
+    参考:
+    - [syscalls on x86](https://syscalls.kernelgrok.com/)
+    - [syscalls on x86_64](https://filippo.io/linux-syscall-table/)或[Linux System Call Table for x86 64带寄存器使用说明](http://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/)
+
+    比如:
+    - x84 sys_init(0x01) : eax = 0x01, ebx = int error_code
+    - x86_64 sys_init(0x3c) : rax = 0x3c, rdi = int error_code
+
+    同时
+- 调用方法不同
+    
+    在32位下用int 0x80中断进行系统调用，而64位下需要用syscall指令进行系统调用
+
+    在x86_64上使用`int 0x80`会导致发生segfault. `syscall`可参考[这里](https://stackoverflow.com/questions/12806584/what-is-better-int-0x80-or-syscall-in-32-bit-code-on-linux).
+- 传参方式不同
+
+    32位程序，我们将系统调用号传入eax，调用参数按照ebx,ecx,edx的顺序写入寄存器，系统调用返回值写入eax寄存器; 而64位程序，系统调用号传入rax，而各个参数按照rdi,rsi,rdx的顺序写入寄存器，系统调用返回值写入rax.
+
 ## risc-v资料收集
 - [RISC-V嵌入式开发入门篇2：RISC-V汇编语言程序设计（上）](https://mp.weixin.qq.com/s/jyI-SSm_5Gg-KQyjKsIj5Q)
 - [硬件软件接口 (RISC-V) Chapter 2](https://blog.csdn.net/weixin_41531090/article/details/87627866)

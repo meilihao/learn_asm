@@ -146,7 +146,8 @@ AT&T:
 
 以上这些都是在X86体系结构下的参数传递方式. 而**在X64体系结构下，大部分编译器都使用的是寄存器传递参数**.
 
-命令行参数压栈(64 bit,栈中存放的是指向具体字符串的指针):
+命令行参数/环境变量压栈(64 bit,栈中存放的是指向具体字符串的指针):
+0x0     <------- 表示env结束
 envp[M] <------ [rsp + (N+1)*8 +(M+1)*8]
 .............
 .............
@@ -159,6 +160,71 @@ argv[N] <------ [rsp + (N+1)*8]
 argv[1] <------  [rsp+16]
 argv[0] <------  [rsp+8]
 argc    <------  [rsp]  // 参数个数
+
+验证:
+```bash
+gdb -q a.out                                                                                                                                                                                 22:31:13
+Reading symbols from a.out...(no debugging symbols found)...done.
+(gdb) set environment a=1 # 每次仅运行设置一个
+(gdb) set environment b=2
+(gdb) set args 5.int.txt 5.out.txt # 运行设置多个
+(gdb) b *_start
+Breakpoint 1 at 0x4000b0
+(gdb) r
+Starting program: /home/chen/git/learn_asm/example/a.out 5.int.txt 5.out.txt
+
+Breakpoint 1, 0x00000000004000b0 in _start ()
+(gdb) p /x $rsp
+$1 = 0x7fffffffdee0
+(gdb) x /100xg 0x7fffffffdee0
+0x7fffffffdee0: 0x0000000000000003      0x00007fffffffe223 # 3 表示argc
+0x7fffffffdef0: 0x00007fffffffe24a      0x00007fffffffe254
+0x7fffffffdf00: 0x0000000000000000      0x00007fffffffe25e
+0x7fffffffdf10: 0x00007fffffffe286      0x00007fffffffe29c
+0x7fffffffdf20: 0x00007fffffffe2b0      0x00007fffffffe312
+0x7fffffffdf30: 0x00007fffffffe329      0x00007fffffffe334
+0x7fffffffdf40: 0x00007fffffffe36b      0x00007fffffffe37d
+0x7fffffffdf50: 0x00007fffffffe3bc      0x00007fffffffe3e0
+0x7fffffffdf60: 0x00007fffffffe40c      0x00007fffffffe425
+0x7fffffffdf70: 0x00007fffffffe43a      0x00007fffffffe46e
+0x7fffffffdf80: 0x00007fffffffe482      0x00007fffffffe492
+0x7fffffffdf90: 0x00007fffffffe4be      0x00007fffffffe4cf
+0x7fffffffdfa0: 0x00007fffffffe4de      0x00007fffffffe508
+0x7fffffffdfb0: 0x00007fffffffe515      0x00007fffffffead1
+0x7fffffffdfc0: 0x00007fffffffeae0      0x00007fffffffeb12
+0x7fffffffdfd0: 0x00007fffffffeb2a      0x00007fffffffeb4c
+0x7fffffffdfe0: 0x00007fffffffeb71      0x00007fffffffed42
+0x7fffffffdff0: 0x00007fffffffed6b      0x00007fffffffed90
+0x7fffffffe000: 0x00007fffffffeda4      0x00007fffffffedb9
+0x7fffffffe010: 0x00007fffffffedcc      0x00007fffffffede0
+0x7fffffffe020: 0x00007fffffffede8      0x00007fffffffee11
+0x7fffffffe030: 0x00007fffffffee25      0x00007fffffffee39
+0x7fffffffe040: 0x00007fffffffee55      0x00007fffffffee5f
+0x7fffffffe050: 0x00007fffffffee81      0x00007fffffffee9c
+0x7fffffffe060: 0x00007fffffffeecc      0x00007fffffffeeeb
+0x7fffffffe070: 0x00007fffffffeefa      0x00007fffffffef2e
+0x7fffffffe080: 0x00007fffffffef49      0x00007fffffffef5a
+0x7fffffffe090: 0x00007fffffffef94      0x00007fffffffefa9
+0x7fffffffe0a0: 0x00007fffffffefb4      0x00007fffffffefc9
+0x7fffffffe0b0: 0x00007fffffffefcd      0x0000000000000000 # 再次遇到0x0表示env结束
+0x7fffffffe0c0: 0x0000000000000021      0x00007ffff7ffd000
+0x7fffffffe0d0: 0x0000000000000010      0x00000000bfebfbff
+...
+(gdb) x /s 0x00007fffffffe223
+0x7fffffffe223: "/home/chen/git/learn_asm/example/a.out" # 程序路径
+(gdb) p (char*)0x00007fffffffe223
+0x7fffffffe223: "/home/chen/git/learn_asm/example/a.out"
+(gdb) x /s 0x00007fffffffe24a
+0x7fffffffe24a: "5.int.txt"
+(gdb) x /s 0x00007fffffffe254
+0x7fffffffe254: "5.out.txt"
+(gdb) x /s 0x00007fffffffe25e
+0x7fffffffe25e: "CHROME_DESKTOP=code-url-handler.desktop"
+(gdb) x /s 0x00007fffffffefc9
+0x7fffffffefc9: "a=1"
+(gdb) x /s 0x00007fffffffefcd
+0x7fffffffefcd: "b=2" # 后添加的env先入栈
+```
 
 ## gnu c 内嵌汇编
 在操作某些特殊的CPU寄存器，操作主板上的某些IO端口或者对性能极为苛刻的场景下, 必须使用c内嵌汇编来满足需求.

@@ -16,28 +16,26 @@ _start:
     call power
     add rsp, 16
 
-    pop rbx # 取出2^3的结果
+    pop rdi # 取出2^3的结果
 
-    add rbx, rax # 加上rax=5^2
-    mov rax, 1
-    int 0x80
+    add rdi, rax # 加上rax=5^2
+    mov rax, 0x3c
+    syscall
 
-# rbx : 保存底数
-# rcx : 保存指数
 .type power @function
 power:
     push rbp
     mov rbp, rsp
 
-    mov rbx, QWORD PTR [rbp + 16]
-    mov rcx, QWORD PTR [rbp + 24]
+    mov rbx, QWORD PTR [rbp + 16] # rbx : 保存底数
+    mov rcx, QWORD PTR [rbp + 24] # rcx : 保存指数
 
-    mov rax, rbx
+    mov rax, rbx # rax : 保存相乘的结果
 
     power_loop_start:
-        cmp rcx, 1
+        cmp rcx, 1 # 因为初始时rax==rbx, 因此判断指数减到1即可结束
         je end_power
-        imul rax, rbx
+        imul rax, rbx # rax*=rbx
         dec rcx # 指数递减
         jmp power_loop_start
 

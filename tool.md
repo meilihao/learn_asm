@@ -17,6 +17,8 @@ nasm注意点:
 
 > as是GNU Binutils下的汇编器, 使用AT&T语法, 但v2.10+之后也支持intel语法.
 
+> **[nasm的语法与gas有差异, 不兼容](https://www.ibm.com/developerworks/cn/linux/l-gas-nasm.html)**, 比如注释, 伪指令表示等, 可见[1.exit_nasm.s](/examples/1.exit_nasm_32.s)
+
 ## 获取汇编代码
 ```bash
 # objdump -d a.out # 默认以AT&T语法输出

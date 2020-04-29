@@ -13,7 +13,7 @@ int $0x80 # int表示中断. 唤醒kernel, 以运行退出命令
 # ```bash
 # $ as 1.exit.s -o exit.o # 汇编
 # $ ld exit.o -o exit # # 链接
-# $ ./exit 
+# $ ./exit
 # $ echo $?
 # 0
 # ```

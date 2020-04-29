@@ -6,15 +6,15 @@
 .section .text
 .globl _start
 _start:
-movq rax, 1 # 设置用于退出程序的syscall number, 这里指`exit`
-movq rbx, 0 # 设在返回给kernel的退出码, `syscall exit`要求在rbx上设置退出码
-int 0x80 # int表示中断. 唤醒kernel, 以运行退出命令
+mov rax, 0x3c # 设置用于退出程序的syscall number, 这里指`exit`
+mov rdi, 0 # 设在返回给kernel的退出码, `syscall exit`要求在rbx上设置退出码
+syscall # int表示中断. 唤醒kernel, 以运行退出命令
 
 
 # ```bash
-# $ as 1.exit.s -o exit.o # 汇编
+# $ as --64 1.exit.s -o exit.o # 汇编
 # $ ld exit.o -o exit # # 链接
-# $ ./exit 
+# $ ./exit
 # $ echo $?
 # 0
 # ```

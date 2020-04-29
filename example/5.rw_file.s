@@ -1,11 +1,12 @@
 # 目的: 读取一个文件并将其中的所有大写字母转成小写再输出到其他文件
-# `./a.out 5.in.txt 5.out.txt`
+# `./a.out 5.in.txt 5.out.txt`, 可用strace调试
 .intel_syntax noprefix
-.equ SYSEXIT, 1
-.equ SYSREAD, 3
-.equ SYSWRITE, 4
-.equ SYSOPEN, 5
-.equ SYSCLOSE, 6
+.equ SYSEXIT, 0x3c
+.equ SYSREAD, 0
+.equ SYSWRITE, 1
+.equ SYSOPEN, 2
+.equ SYSCLOSE, 3
+
 
 # 打开文件的选项见/usr/include/asm-generic/fcntl.h, 允许选项叠加
 .equ O_RDONLY, 0
@@ -17,13 +18,12 @@
 .equ STDERR, 2
 
 # int
-.equ LINUX_SYSCALL, 0x80 # do syscall
 .equ END_OF_File, 0 # read操作的返回值, 表示已到达文件结束处
 .equ NUMBER_ARGUMENTS, 2
 
 .section .bss
 .equ BUFFER_SIZE, 500
-.lcomm BUFFER_DATA, BUFFER_SIZE
+.lcomm BUFFER_DATA, BUFFER_SIZE # 运行时, BUFFER_DATA未初始化???
 
 .section .text
 
@@ -40,36 +40,38 @@
 _start:
 mov rbp, rsp
 
-# linux开始时, 所有指向命令行参数的指针都存储在栈中, 参数个数在[rsp+16], 程序名在[rsp+24], 参数在[rsp+32]及之后的存储位置, 参数以`\0`结尾.
-open_files:
+# linux开始时, 所有指向命令行参数的指针都存储在栈中, 参数个数在[rsp], 程序名在[rsp+8], 参数在[rsp+16]及之后的存储位置, 指针指向的字符串参数以`\0`结尾.
+open_files: # symbol不影响代码程序运行, 仅在程序跳转时有用
 open_fd_in: # 打开文件, 会将fd结果放入rax
     mov rax, SYSOPEN
-    mov rbx, [rbp+ST_ARGV_1] # 获取输入文件名
-    mov rcx, O_RDONLY # 打开选项
-    mov rdx, 0666 # 权限
-    int LINUX_SYSCALL
+    mov rdi, QWORD PTR [rbp+ST_ARGV_1] # 获取输入文件名
+    mov rsi, O_RDONLY # 打开选项
+    mov rdx, 0 # 权限, 不影响实际的读操作
+    syscall
 
 store_fd_in:
-    sub rsp, ST_SIZE_RESERVE
-    mov [rsp], rax # 保存输入文件的fd
+    push rax # 保存输入文件的fd
 
 open_fd_out:
     mov rax, SYSOPEN
-    mov rbx, [rbp+ST_ARGV_2] # 获取输出文件名
-    mov rcx, O_CREAT_WRONLY_TRUNC
+    mov rdi, QWORD PTR [rbp+ST_ARGV_2] # 获取输出文件名
+    mov rsi, O_CREAT_WRONLY_TRUNC
     mov rdx, 0666
-    int LINUX_SYSCALL
+    syscall
 
 store_fd_out:
-    sub rsp, ST_SIZE_RESERVE
-    mov [rsp], rax # 保存输出文件的fd
+    push rax # 保存输出文件的fd
 
 read_loop_begin: # 开始主逻辑
     mov rax, SYSREAD
-    mov rbx, [rbp+ST_FD_IN] # rbx放入fd
-    mov rcx, BUFFER_DATA # rcx保存缓存区地址
+    mov rdi, QWORD PTR [rbp+ST_FD_IN] # rbx放入fd
+    mov rsi, BUFFER_DATA # rcx保存缓存区地址
     mov rdx, BUFFER_SIZE # rdx保存缓存区大小
-    int LINUX_SYSCALL
+    syscall
+
+    mov rdi, rax
+    mov rax, SYSEXIT # 退出
+    syscall
 
     cmp rax, END_OF_File # rax保存了读取到的字符数, 负数表示错误
     jle end_loop
@@ -84,24 +86,24 @@ continue_read_loop: # 将数据内容的小写换成大写
     ## 将buf写入输出文件, 返回写入的字节数, 负数为错误
     mov rdx, rax # 要写入的大小
     mov rax, SYSWRITE
-    mov rbx, [rbp+ST_FD_OUT] # 要写入的fd
-    mov rcx, BUFFER_DATA # 缓存区位置
-    int LINUX_SYSCALL
+    mov rdi, QWORD PTR [rbp+ST_FD_OUT] # 要写入的fd
+    mov rsi, BUFFER_DATA # 缓存区位置
+    syscall
 
     jmp read_loop_begin
 
 end_loop:
     mov rax, SYSCLOSE # 关闭文件
-    mov rbx, [rbp+ST_FD_OUT] # 将要关闭的fd放入rbx
-    int LINUX_SYSCALL
+    mov rdi, QWORD PTR [rbp+ST_FD_OUT] # 将要关闭的fd放入rbx
+    syscall
 
     mov rax, SYSCLOSE
-    mov rbx, [rbp+ST_FD_IN]
-    int LINUX_SYSCALL
+    mov rdi, QWORD PTR [rbp+ST_FD_IN]
+    syscall
 
     mov rax, SYSEXIT # 退出
-    mov rbx, 0
-    int LINUX_SYSCALL
+    mov rdi, 0
+    syscall
 
 # 搜索边界
 .equ LOWERCASE_A, 'a'
@@ -116,15 +118,15 @@ convert_to_upper:
 push rbp
 mov rbp, rsp
 
-mov rax, [rbp+ST_BUFFER] # 获取缓存区地址
-mov rbx, [rbp+ST_BUFFER_LEN] # 读到的长度
+mov rax, QWORD PTR [rbp+ST_BUFFER] # 获取缓存区地址
+mov rbx, QWORD PTR [rbp+ST_BUFFER_LEN] # 读到的长度
 mov rdi, 0 # 首次开始读取的index
 
 cmp rbx,0 # 给定的缓存区长度为0时退出
 je end_convert_loop
 
 convert_loop: # 开始循环
-    mov cl, [rax+rdi*1] # 获取当前字节
+    mov cl, BYTE PTR [rax+rdi*1] # 获取当前字节
 
     cmp cl, LOWERCASE_A
     jl next_byte
@@ -132,7 +134,7 @@ convert_loop: # 开始循环
     jg next_byte
 
     add cl, UPPER_CONVERSION # 小写->大写
-    mov [rax+ rdi*1], cl
+    mov BYTE PTR [rax+ rdi*1], cl
 
 next_byte:
     inc rdi # 下一个字节
