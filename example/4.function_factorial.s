@@ -1,35 +1,36 @@
 # PURPOSE: 递归函数, 求n!
+.intel_syntax noprefix
 .section .data
 .section .text
 .globl _start
 .globl factorial
 
 _start:
-    pushq $4
+    push 4
     call factorial
-    addq $8, %rsp
-    movq %rax, %rbx
+    add rsp, 8 # 撤销栈帧
+    mov rbx, rax
 
-    movq $1, %rax
-    int $0x80
+    mov rax, 1
+    int 0x80
 
 .type factorial @function
 factorial:
-    pushq %rbp
-    movq %rsp, %rbp
+    push rbp
+    mov rbp, rsp
 
-    movq 16(%rbp), %rax # 获取参数
-    cmpq $1, %rax
+    mov rax, [rbp+16] # 获取参数
+    cmp rax, 1
     je end_factorial
-    decq %rax
-    pushq %rax # 保存向下一个call传递的参数
+    dec rax
+    push rax # 保存向下一个call传递的参数
     call factorial # 此时rax保存的是下一个函数的返回值
 
-    movq 16(%rbp),%rbx # 获取参数
-    imulq %rbx, %rax
+    mov rbx, [rbp+16] # 获取参数
+    imul rax, rbx
 
     end_factorial:
-        movq %rbp, %rsp # 将rsp重置为rbp. 因为修改了rsp
-        popq %rbp
+        mov rsp, rbp # 将rsp重置为rbp. 因为修改了rsp
+        pop rbp
         ret
     
