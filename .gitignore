@@ -2,3 +2,4 @@
 *.elf
 *.out
 core
+example/5.out.txt

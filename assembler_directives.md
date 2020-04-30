@@ -32,7 +32,7 @@
 `.equ BaseOfStack, 0x7c00`
 
 ## `.global`
-`.global xxx`表示汇编程序不应在汇编之后废弃该符号, 因为ld(连接器)需要它.
+`.global xxx`表示汇编程序不应在汇编之后废弃该符号即该符号能够被外部程序访问, 比如ld(连接器)可能需要它.
 
 - `.global _start` : `_start`是一个特殊符号, 标识了程序的开始位置.
 

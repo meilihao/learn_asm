@@ -4,7 +4,7 @@
 .intel_syntax noprefix
 .section .data
 .section .text
-.globl _start
+.globl _start # 表示默认的起始点
 _start:
 mov rax, 0x3c # 设置用于退出程序的syscall number, 这里指`exit`
 mov rdi, 0 # 设在返回给kernel的退出码, `syscall exit`要求在rbx上设置退出码

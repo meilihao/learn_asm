@@ -1,4 +1,4 @@
-# 目的: 读取一个文件并将其中的所有大写字母转成小写再输出到其他文件
+# 目的: 读取一个文件并将其中的所有字母转成大写再输出到其他文件
 # `./a.out 5.in.txt 5.out.txt`, 可用strace调试
 .intel_syntax noprefix
 .equ SYSEXIT, 0x3c
@@ -21,9 +21,15 @@
 .equ END_OF_File, 0 # read操作的返回值, 表示已到达文件结束处
 .equ NUMBER_ARGUMENTS, 2
 
-.section .bss
 .equ BUFFER_SIZE, 500
-.lcomm BUFFER_DATA, BUFFER_SIZE # 运行时, BUFFER_DATA未初始化???
+
+.section .bss
+.lcomm BUFFER_DATA, BUFFER_SIZE
+
+# 与.section .bss功能类似, 区别是编译时BUFFER_DATA就初始化好了, `.bss`是程序运行时BUFFER_DATA再初始化.
+# .section .data
+# BUFFER_DATA:
+#     .fill BUFFER_SIZE
 
 .section .text
 
@@ -65,19 +71,16 @@ store_fd_out:
 read_loop_begin: # 开始主逻辑
     mov rax, SYSREAD
     mov rdi, QWORD PTR [rbp+ST_FD_IN] # rbx放入fd
-    mov rsi, BUFFER_DATA # rcx保存缓存区地址
-    mov rdx, BUFFER_SIZE # rdx保存缓存区大小
-    syscall
-
-    mov rdi, rax
-    mov rax, SYSEXIT # 退出
+    lea rsi, BUFFER_DATA # rsi保存缓冲区地址, lea就是将BUFFER_DATA的addr放入rsi // mov rsi, BUFFER_DATA => `mov 0x402000,%rsi`, 此时rsi是0, 取的是BUFFER_DATA(0x402000)头8B的内容
+    mov rdx, BUFFER_SIZE # rdx保存缓冲区大小
     syscall
 
     cmp rax, END_OF_File # rax保存了读取到的字符数, 负数表示错误
     jle end_loop
 
 continue_read_loop: # 将数据内容的小写换成大写
-    push BUFFER_DATA
+    lea rdx, BUFFER_DATA
+    push rdx # `push BUFFER_DATA` => `pushq  0x402000`, 此时push进去的是BUFFER_DATA(0x402000)头8B的内容. 必须通过寄存器中转
     push rax
     call convert_to_upper
     pop rax # 重新获取大小
@@ -87,7 +90,7 @@ continue_read_loop: # 将数据内容的小写换成大写
     mov rdx, rax # 要写入的大小
     mov rax, SYSWRITE
     mov rdi, QWORD PTR [rbp+ST_FD_OUT] # 要写入的fd
-    mov rsi, BUFFER_DATA # 缓存区位置
+    lea rsi, BUFFER_DATA # 缓存区位置
     syscall
 
     jmp read_loop_begin
@@ -108,7 +111,7 @@ end_loop:
 # 搜索边界
 .equ LOWERCASE_A, 'a'
 .equ LOWERCASE_Z, 'z'
-.equ UPPER_CONVERSION, 32 # 'A' - 'a', 小写-32=大写
+.equ UPPER_CONVERSION, 32 # 'A' - 'a', 小写=大写+32
 
 ###STACK STUFF###
 .equ ST_BUFFER, 24 # 保存缓存区地址
@@ -133,7 +136,7 @@ convert_loop: # 开始循环
     cmp cl, LOWERCASE_Z
     jg next_byte
 
-    add cl, UPPER_CONVERSION # 小写->大写
+    sub cl, UPPER_CONVERSION # 大写->小写
     mov BYTE PTR [rax+ rdi*1], cl
 
 next_byte:

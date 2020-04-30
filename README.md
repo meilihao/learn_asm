@@ -27,6 +27,9 @@ AT&T语法是一种相当老的语法，由GAS和一些老式汇编器使用；N
 - x86/x86_64 : [<<Intel® 64 and IA-32 ArchitecturesSoftware Developer’s ManualVolume 2>>的Chapter 3~5](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf)
 
 ## 64 bit汇编
+参考:
+- [linux x64 汇编.md](https://github.com/Byzero512/blog_data/blob/master/linux%20x64%20%E6%B1%87%E7%BC%96.md)
+
 1. 用户模式的系统调用依次传递的寄存器为: rdi,rsi,rdx,rcx,r8和r9
 1. 内核接口的系统调用一次传递的寄存器为: rdi,rsi,rdx,r10,r8和r9. 注意这里和用户模式的系统调用只有第4个寄存器不同，其他都相同
 1. 系统调用通过syscall指令进入，不像32位下的汇编使用的是int 0x80指令；
@@ -36,6 +39,9 @@ AT&T语法是一种相当老的语法，由GAS和一些老式汇编器使用；N
 1. 只有整形值和内存型的值可以传递给内核
 
 ### Linux 32位系统调用和64位系统调用的区别
+参考:
+- [Linux 系统调用权威指南(2016)](http://arthurchiao.art/blog/system-call-definitive-guide-zh/)
+
 - 系统调用号(syscall)不同
 
     参考:
