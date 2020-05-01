@@ -45,28 +45,18 @@
 - `.byte` : 用byte生成
 - `.ascii` : 用ascii字符生成
 
+## `.rept`/`.endr`
+重复`.rept`,`.endr`间的指令n次.
+
+```x86asm
+.ascii "2224 S Johannan St\nChicago, IL 12345\0"
+.rept 203 # 填充到240字节
+.byte 0
+.endr
+```
 
 ## `.section`
-将程序分为几个部分.
-
-- `.section .bss` : `.bss`段的开始标识. 它存储了**未初始化的全局变量或者是默认初始化为0的全局变量**, 且不占空间, 属于静态内存分配.
-
-    仅在程序运行时，才会给`.bss`段里面的变量分配内存空间.
-- `.section .data` : 数据段的开始标识. 它存储了已初始化的全局变量，但初始化为0的全局变量出于编译优化的策略还是被保存在`.bss`中, 属于静态内存分配.
-- `.section .rel.text`: 针对`.text`段的重定位表，还有rel.data(针对data段的重定位表).
-- `.section .rodata` : 该段也叫常量区(只读)，用于存放常量数据, 比如字符串常量, 全局const变量和#define定义的常量.
-
-    特殊:
-    1. 部分立即数会直接存放在`.text`中
-    1. 对于字符串常量，编译器会去掉重复的常量，让程序的每个字符串常量只有一份
-    1. `.rodata`是在多个进程间是共享的，这可以提高空间利用率
-- `.section .strtab`: 存储变量名，函数名等. 例如, `char* szPath="/root"`, `void func()`的变量名szPath和函数名func就存储在`.strtab`段.
-- `.section .shstrtab`: bss,text,data等段名存储在这里.
-- `.section .text` : 本地段的开始标识. 文本段保存程序指令.
-
-> bss是Block Started by Symbol
-
-> static 声明的变量，无论它是全局变量还是在函数之中，只要是没有赋初值都存放在.bss段，如果赋了初值，则把它放在.data段.
+将程序分为几个部分, 具体见[elf的可重定位文件](https://github.com/meilihao/programming-interface/blob/master/compile/elf.md).
 
 ## `.type`
 `.type name,@type` : 将符号name的type属性设为type, 其中type可以是function或object.

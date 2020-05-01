@@ -52,7 +52,7 @@ open_fd_in: # 打开文件, 会将fd结果放入rax
     mov rax, SYSOPEN
     mov rdi, QWORD PTR [rbp+ST_ARGV_1] # 获取输入文件名
     mov rsi, O_RDONLY # 打开选项
-    mov rdx, 0 # 权限, 不影响实际的读操作
+    mov rdx, 0 # 权限, 0不影响实际的读操作, 但文件不存在时, 创建并保存后会没有权限, 因此推荐使用0666.
     syscall
 
 store_fd_in:

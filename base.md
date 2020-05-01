@@ -1,4 +1,15 @@
 # base
+汇编程序由三个不同的元素组成：
+- 伪指令（Directives） 
+
+    以点号开始，用来指示对编译器，连接器，调试器有用的结构信息, 指示本身不是汇编指令.例如，`.file` 只是记录原始源文件名. `.data`表示数据段(section)的开始地址, 而 `.text`表示实际程序代码的起始. `.string`表示数据段中的字符串常量. `.globl main`指明标签main是一个可以在其它模块的代码中被访问的全局符号等等.
+- 标签（symbol/Labels） 
+
+    以冒号结尾，用来把标签名和标签出现的位置关联起来. 例如，标签`.LC0:`表示紧接着的字符串的名称是`.LC0`. 标签`main:`表示main函数的开始. 按照惯例， 以点号开始的标签都是编译器生成的临时局部标签，其它标签则是用户可见的函数和全局变量名称.
+
+- 指令（Instructions）
+
+    实际的汇编代码, 一般都会缩进，以便和伪指令及symbol区分开来
 
 ## 语法
 ### AT&T汇编和Intel汇编差异
@@ -125,6 +136,24 @@ AT&T:
 
 ![调用栈](/misc/img/compile/20200112171557752.png)
 参考: [汇编指令push,mov,call,pop,leave,ret建立与释放栈的过程](https://blog.csdn.net/liu_if_else/article/details/72794199)
+
+#### [GCC的x86平台cdecl规范详解](http://blog.bytemem.com/post/linux-kernel-function-call-convention)
+cdecl属于Caller clean-up类规范. 在调用子程序（callee）时，x87浮点寄存器ST0-ST7必须是空的，在退出子程序时，ST1-ST7必须是空的，如果没有浮点返回值，ST0也必须是空的. 从gcc 4.5开始，函数栈的地址必是16-byte对齐的，在此之前只要求4-byte对齐.
+
+寄存器现场的保存：
+
+    x86-32: 寄存器EAX, ECX, EDX由调用者自己保存（caller-saved），子程序可以改变这些寄存器的值而不用恢复，其他寄存器是callee-saved.
+    x86-64: 寄存器RBX, RBP, 和 R12–R15 由子程序保存和恢复，其他寄存器由调用者自己保存.
+
+函数返回值：
+
+    x86-32: 如果是整数存放在EAX寄存器, 如果是浮点数存放在x87协处理器的ST0寄存器.
+    x86-64: 64位返回值存放在RAX寄存器，128为返回值保存在RAX和RDX寄存器. 浮点返回值保存在XMM0和XMM1寄存器.
+
+其函数参数传递方式在x86-32和x86-64上是不同的：
+
+    x86-32: 所有函数参数都通过函数栈传递，并且参数入栈顺序是Right-to-Left，即最后一个参数先入栈，第一个参数最后入栈.
+    x86-64: 由于AMD64架构提供了更多的可用寄存器，编译器充分利用寄存器来传递参数. 函数的前六个整数参数依次用寄存器RDI, RSI, RDX, RCX, R8, R9 (R10 is used as a static chain pointer in case of nested functions)传递，比如只有一个参数时，用RDI传递参数；如果参数是浮点数，则依次用寄存器XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6 and XMM7传递. 额外的参数仍然通过函数栈传递. **对于可变参数的函数，实际浮点类型的参数的个数需保存在RAX寄存器**.
 
 ### 参数传递方式
 

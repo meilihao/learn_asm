@@ -40,22 +40,26 @@ AT&T语法是一种相当老的语法，由GAS和一些老式汇编器使用；N
 
 ### Linux 32位系统调用和64位系统调用的区别
 参考:
-- [Linux 系统调用权威指南(2016)](http://arthurchiao.art/blog/system-call-definitive-guide-zh/)
+- [Linux 系统调用权威指南(2016)](http://arthurchiao.art/blog/system-call-definitive-guide-zh/) 翻译自[The Definitive Guide to Linux System Calls](https://blog.packagecloud.io/eng/2016/04/05/the-definitive-guide-to-linux-system-calls/)
 
 - 系统调用号(syscall)不同
 
     参考:
-    - [syscalls on x86](https://syscalls.kernelgrok.com/)
-    - [syscalls on x86_64](https://filippo.io/linux-syscall-table/)或[Linux System Call Table for x86 64带寄存器使用说明](http://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/)
+    - [syscalls on x86](https://syscalls.kernelgrok.com/) @ `/arch/x86/syscalls/syscall_32.tbl`
+    - [syscalls on x86_64](https://filippo.io/linux-syscall-table/)或[Linux System Call Table for x86 64带寄存器使用说明](http://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/) @ `arch/x86/syscalls/syscall_64.tbl`
 
     比如:
     - x84 sys_init(0x01) : eax = 0x01, ebx = int error_code
     - x86_64 sys_init(0x3c) : rax = 0x3c, rdi = int error_code
 
-    同时
+    **手写汇编代码来发起系统调用并不是一个好主意. 其中一个重要原因是，glibc 中有 一些额外代码在系统调用之前或之后执行（而自己写的汇编代码没有做这些类似的工作）**. 同时内核的 ABI 可能会有不兼容更新. 而内核和 libc 实现通常（可能）会为每个系统自动选择最快的系统调用方式, 以避免出问题.
+
+    比如使用 exit 系统调用: 事实上可以用 atexit函数向 exit 注册 回调函数，在它退出的时候就会执行. 这些函数是从 glibc 里调用的，而不是内核. 因此，如果自己写的汇编代码调用 exit，那注册的回调函数就不会被执行，因为这种方 式绕过了 glibc.
+
+    **然而，徒手写汇编来调系统调用是一次很好的学习方式.**
 - 调用方法不同
     
-    在32位下用int 0x80中断进行系统调用，而64位下需要用syscall指令进行系统调用
+    在32位下用int 0x80中断(是软中断, 对应中断函数是ia32_syscall@`arch/x86/ia32/ia32entry.S`)进行系统调用，而64位下需要用syscall指令进行系统调用
 
     在x86_64上使用`int 0x80`会导致发生segfault(原因: 变量地址是64bit, 用0x80号中断调用时仅用到32bit地址, 高32bit丢失, 导致内存访问时地址越界). `syscall`可参考[这里](https://stackoverflow.com/questions/12806584/what-is-better-int-0x80-or-syscall-in-32-bit-code-on-linux).
 
