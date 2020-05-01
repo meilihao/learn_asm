@@ -23,6 +23,24 @@ lea rdi, input_file_name
 mov rsi, 0 # 表示只读打开
 mov rdx, 0666
 syscall
+
+# 返回值检查
+cmp rax, 0
+jg continue_processing
+
+# Send the error
+.section .data
+no_open_file_code:
+.ascii "0001: \0"
+no_open_file_msg:
+.ascii "Can’t Open Input File\0"
+.section .text
+
+lea rdi, no_open_file_code
+lea rsi, no_open_file_msg
+call error_exit
+
+continue_processing:
 push rax
 
 mov rax, SYS_OPEN
