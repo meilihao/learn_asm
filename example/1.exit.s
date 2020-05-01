@@ -12,7 +12,7 @@ syscall # int表示中断. 唤醒kernel, 以运行退出命令
 
 
 # ```bash
-# $ as --64 1.exit.s -o exit.o # 汇编
+# $ as --64 -g 1.exit.s -o exit.o # 汇编, -g, 生成调试信息
 # $ ld exit.o -o exit # # 链接
 # $ ./exit
 # $ echo $?

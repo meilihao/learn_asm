@@ -99,3 +99,6 @@ Breakpoint 3, 0x0000000000401011 in _start ()
 (gdb) p /x $rax
 $2 = 0xffffffffffffff
 ```
+
+### invalid instruction suffix for `push' on x86_64
+在64位系统和32位系统的as命令对于某些汇编指令的处理支持不一样造成的，所以在文本开头加上`.code32`

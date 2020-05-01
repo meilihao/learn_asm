@@ -57,10 +57,16 @@ AT&T语法是一种相当老的语法，由GAS和一些老式汇编器使用；N
     
     在32位下用int 0x80中断进行系统调用，而64位下需要用syscall指令进行系统调用
 
-    在x86_64上使用`int 0x80`会导致发生segfault. `syscall`可参考[这里](https://stackoverflow.com/questions/12806584/what-is-better-int-0x80-or-syscall-in-32-bit-code-on-linux).
-- 传参方式不同
+    在x86_64上使用`int 0x80`会导致发生segfault(原因: 变量地址是64bit, 用0x80号中断调用时仅用到32bit地址, 高32bit丢失, 导致内存访问时地址越界). `syscall`可参考[这里](https://stackoverflow.com/questions/12806584/what-is-better-int-0x80-or-syscall-in-32-bit-code-on-linux).
 
-    32位程序，我们将系统调用号传入eax，调用参数按照ebx,ecx,edx的顺序写入寄存器，系统调用返回值写入eax寄存器; 而64位程序，系统调用号传入rax，而各个参数按照rdi,rsi,rdx的顺序写入寄存器，系统调用返回值写入rax.
+    调用error说明(保存在rax中):
+    - /usr/include/asm-generic/errno-base.h
+    - /usr/include/asm-generic/errno.h
+- 传参方式不同(即ABI)
+
+    32位程序，我们将系统调用号传入eax，调用参数压栈传递，系统调用返回值写入eax寄存器; 而64位程序，系统调用号传入rax，而各个参数按照rdi,rsi,rdx,rcx, r8, r9的顺序写入寄存器，系统调用返回值写入rax.
+
+    见example的`cpuid*.s`的例子.
 
 ## risc-v资料收集
 - [RISC-V嵌入式开发入门篇2：RISC-V汇编语言程序设计（上）](https://mp.weixin.qq.com/s/jyI-SSm_5Gg-KQyjKsIj5Q)
