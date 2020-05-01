@@ -26,7 +26,7 @@ mov DWORD PTR [rdi+8], ecx
 
 lea rsi, buffer # 在x64环境下，参数传递方式跟在x86下不同，前者用的是多用寄存器，后者用的是压栈.
 lea rdi, output
-mov rax, 0
+mov rax, 0 # 表示未传入浮点数, 见[base.md#GCC的x86平台cdecl规范详解]
 call printf
 
 lea rsi, output2
