@@ -75,3 +75,6 @@ AT&T语法是一种相当老的语法，由GAS和一些老式汇编器使用；N
 ## risc-v资料收集
 - [RISC-V嵌入式开发入门篇2：RISC-V汇编语言程序设计（上）](https://mp.weixin.qq.com/s/jyI-SSm_5Gg-KQyjKsIj5Q)
 - [硬件软件接口 (RISC-V) Chapter 2](https://blog.csdn.net/weixin_41531090/article/details/87627866)
+
+## 相关书单
+- - <<深入理解程序设计使用Linux汇编语言>> : 不推荐, 内容是32-bit汇编
