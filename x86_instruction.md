@@ -12,9 +12,22 @@
 `addq $16, %rsp` => rsp+=16
 
 ### imul[L]
-相乘
+有符号相乘
 
 `imull %rbx, %rax` => rax*=rbx
+
+### mul[L]
+无符号相乘
+
+### div[L]
+无符号除法
+
+`div %rbx, %rax` => rax/=rbx
+
+### idiv[L]
+有符号除法
+
+`idiv %rbx, %rax` => rax/=rbx
 
 ### dec[L]
 递减
@@ -26,7 +39,48 @@
 
 `incl %rdi` => rdi++
 
-## 比较和跳转
+### neg[L]
+二进制求补码
+
+## 逻辑计算
+### and
+`and rax, 1`, rax&=1
+
+### not
+对操作数的每一位取反
+
+### or
+
+### xor
+`xor rax, rax` <=> `mov  rax, 0` , 此时用xor更快
+
+### xor
+异或
+
+## 移位
+### shr
+`shr rax, ${n}`, 逻辑右移(不保留符号), n是移动次数
+
+### shl
+`shl rax, ${n}`, 逻辑左移(不保留符号), n是移动次数
+
+### sar
+`sar rax, ${n}`, 算术右移(保留符号), n是移动次数
+
+### sal
+`sal rax, ${n}`, 算术左移(保留符号), n是移动次数
+
+## 流控制: 比较和跳转
+### call
+函数调用
+
+`call ${function_name}`
+
+### int
+触发中断
+
+### ret
+
 ### jmp
 无条件跳转
 
@@ -49,13 +103,9 @@ JMP指令需要编译器生成目标标签(LABEL）. 标签必须唯一，并且
 `POP rax`
 
 ## 函数调用 Calling Functions
-### call
-函数调用
-
-`call ${function_name}`
 
 ## lea
-lea(load effective address, 加载有效地址)，可以将有效地址传送到指定的的寄存器. 指令形式是从存储器读数据到寄存器, 效果是将存储器的有效地址写入到目的操作数, 简单说, 就是C语言中的`&`.
+lea(load effective address, 加载有效地址)，可以将有效地址传送到指定的的寄存器. 简单说, 就是C语言中的`&`.
 
 ## mov[L]
 赋值

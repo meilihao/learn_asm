@@ -21,7 +21,7 @@ gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇
 1. 操作数长度标识: AT&T 语法将操作数的大小表示在指令的后缀中（b、w、l, 分别是1,2,4字节）；Intel 语法将操作数的大小表示在操作数的前缀中（BYTE PTR、WORD PTR、DWORD PTR）
 1. 内存寻址方式: AT&T 语法总体上是section:offset(base, index, width)的格式; Intel 语法总体上是section:[INDEX * WIDTH + BASE + OFFSET]的格式
 
-    section用于指定段寄存器.
+    section用于指定段寄存器. 但由于 Linux 工作在保护模式下，用的是 32/48 位线性地址，所以在计算地址时不用考虑段基址和偏移量, 因此`addr= OFFSET + base + index * WIDTH`
 1. jump和call: 远跳转指令, 远调用指令, 远返回的操作码，在 AT&T 汇编格式中为 "ljump", "lcall",`lret`; 而在 Intel 汇编格式中则为 "jmp far", "call far", `ret`
 
     AT&T:
@@ -67,19 +67,87 @@ gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇
 - rflags
 
 ## 寻址
+参考:
+- [16 bit/单片机寻址共七种](https://cloud.tencent.com/developer/article/1592148)
+- [32 bit寻址](https://cloud.tencent.com/developer/article/1592148)
+
+> 在用16位寄存器来访问存储单元时，只能使用基地址寄存器(BX和BP)和变址寄存器(SI和DI)来作为地址偏移量的一部分，但在用32/64位寄存器寻址时，不存在上述限制，所有32位寄存器(EAX、EBX、ECX、EDX、ESI、EDI、EBP和ESP)都可以是地址偏移量的一个组成部分.
+
+> 基址寄存器是EBP或ESP时，默认的段寄存器是SS，否则，默认的段寄存器是DS
+
+
+![32位地址偏移量进行寻址的有效地址计算公式](/misc/img/wwo4wjpgd1.gif)
+
+速度(快-> 慢): 立即寻址 -> 寄存器寻址 -> 直接寻址 -> 间接寻址 -> 索引寻址
+
+> x64新增rip寄存器其保存当前指令的下一条指令的地址，而x86的数据寻址只有绝对寻址.
+
+### 64-bit寻址
 Intel:
 - 立即寻址 : `mov rax, 1` => rax = 1
+- 寄存器寻址 : `mov rax, rbx`, 寄存器间
 - 直接寻址 : `mov rax, [1]`, 将地址1开始的内容(8B)放入rax.
-- 索引寻址 : `mov eax, DWORD PTR [rdi*4 + data_items]` => `mov rax, QWORD PTR [rcx*1 + BASE + string_start]`, `s[INDEX * WIDTH + BASE + OFFSET]`
 - 间接寻址 : `mov rbx, [rax]`, 从寄存器指定的地址加载值
-- 基址寻址 : `mov rbx, [rax+4]`, rbx =  rax + 4
+
+    - RIP相对寻址 : `mov rax, [rip]`
+- 索引寻址 : `mov rax, QWORD PTR [rcx*1 + BASE + string_start]`, addr = `[INDEX * WIDTH + BASE + OFFSET]`
 
 AT&T:
 - 立即寻址 : `movq $1, %rax`, 用`$`表示立即寻址, 没有`$`时表示直接寻址
+- 寄存器寻址 : `movq %rbx, %rax`
 - 直接寻址 : `movq 1, %rax`, 将地址1开始的内容(8B)放入rax.
-- 索引寻址 : `movq string_start(, %ecx, 1), %eax` => `offset(base, index, width)`, addr = `base + %索引寄存器*比例因子 + offset`
 - 间接寻址 : `movq (%rax), %rbx`, 从寄存器指定的地址加载值
-- 基址寻址 : `movq 4(%rax), %rbx`, rbx =  (%rax) + 4
+
+    - RIP相对寻址 : `mov 0x0(%rip),%rax`
+- 索引寻址 : `movq string_start(, %ecx, 1), %eax` => `offset(base, index, width)`, addr = `base + %索引寄存器*比例因子 + offset`
+
+### 16 bit/单片机寻址
+- 立即寻址方式
+- 寄存器寻址方式
+
+    指令中可以引用的寄存器及其符号名称如下：
+    - 8位寄存器有：AH、AL、BH、BL、CH、CL、DH和DL等
+    - 16位寄存器有：AX、BX、CX、DX、SI、DI、SP、BP和段寄存器等
+    - 32位寄存器有：EAX、EBX、ECX、EDX、ESI、EDI、ESP和EBP等
+- 直接寻址方式
+- 寄存器间接寻址
+
+    ![寄存器间接寻址](/misc/img/ckhut33a5v.gif)
+
+    在不使用段超越前缀的情况下，有下列规定：
+    1. 若有效地址用SI、DI和BX等之一来指定，则其缺省的段寄存器为DS
+　　1. 若有效地址用BP来指定，则其缺省的段寄存器为SS(即：堆栈段)
+
+    `MOV BX,[DI]`，在执行时，(DS)=1000H，(DI)=2345H, 推导过程:
+    1. addr=(DS)*16+DI=1000H*16+2345H=12345H
+    因此`MOV BX,[DI]`=`MOV BX, [12345H]`
+- 寄存器相对寻址
+
+    ![寄存器相对寻址](/misc/img/a3aqwpergc.gif)
+
+    在不使用段超越前缀的情况下，有下列规定：
+    1. 若有效地址用SI、DI和BX等之一来指定，则其缺省的段寄存器为DS；
+    1. 若有效地址用BP来指定，则其缺省的段寄存器为SS。
+
+　　指令中给出的8位/16位偏移量用补码表示. 在计算有效地址时，如果偏移量是8位，则进行符号扩展成16位. 当所得的有效地址超过0FFFFH，则取其64K的模.
+
+    `MOV BX, [SI+100H]`，在执行它时，(DS)=1000H，(SI)=2345H, 推导过程:
+    1. EA(源操作数的有效地址)=(SI)+100H=2345H+100H=2445H
+    1. add=(DS)*16+EA=1000H*16+2445H=12445H
+    因此`MOV BX, [SI+100H]`=`mov bx, [12445H]`
+- 基址加变址寻址/相对基址加变址寻址
+
+    ![基址加变址寻址](/misc/img/wbe73enxd1.gif)
+    ![相对基址加变址寻址](/misc/img/506vlj2mx0.gif)
+
+    > 区别: 相对基址加变址寻址有偏移量, 指令中给出的8位/16位偏移量用补码表示. 在计算有效地址时，如果偏移量是8位，则进行符号扩展成16位. 当所得的有效地址超过0FFFFH，则取其64K的模.
+
+    在不使用段超越前缀的情况下，规定：如果有效地址中含有BP，则其缺省的段寄存器为SS；否则，其缺省的段寄存器为DS.
+    
+    `MOV AX, [BX+SI+200H]`，在执行时，(DS)=10000H，(BX)=2100H，(SI)=0010H, 推导过程:
+    1. EA(源操作数的有效地址)=(BX)+(SI)+200H=2100H+0010H+200H=2310H
+    1. addr=(DS)*16+EA=10000H*16+2310H=12310H // BX=>选择DS
+    因此`MOV AX, [BX+SI+200H]`=`MOV AX, [12310H]`
 
 ## 中断
 中断会中断正常的流程, 把控制权从应用程序转给kernel的中断处理程序.

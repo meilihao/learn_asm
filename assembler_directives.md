@@ -8,6 +8,9 @@
 
 > nm命令可查看程序的符号信息.
 
+## .ascii
+将给定字符串转为byte序列.
+
 ## `.comm`
 `.comm ${symbol}, ${length}`
 
@@ -32,7 +35,7 @@
 `.equ BaseOfStack, 0x7c00`
 
 ## `.global`
-`.global xxx`表示汇编程序不应在汇编之后废弃该符号即该符号能够被外部程序访问, 比如ld(连接器)可能需要它.
+`.global xxx`表示汇编程序不应在汇编之后废弃该符号即该符号能够被外部程序访问, 比如ld(连接器)可能需要它. 它将给定的symbol设为全局, 表示在分开编译的`.o`中可使用该symbol.
 
 - `.global _start` : `_start`是一个特殊符号, 标识了程序的开始位置.
 
@@ -44,6 +47,9 @@
 类似的指令有:
 - `.byte` : 用byte生成
 - `.ascii` : 用ascii字符生成
+
+## `.include`
+包含指定文件
 
 ## `.rept`/`.endr`
 重复`.rept`,`.endr`间的指令n次.
