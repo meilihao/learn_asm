@@ -70,17 +70,21 @@ gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇
 参考:
 - [16 bit/单片机寻址共七种](https://cloud.tencent.com/developer/article/1592148)
 - [32 bit寻址](https://cloud.tencent.com/developer/article/1592148)
+- [x86/x64体系探索及编程#2.4]
 
 > 在用16位寄存器来访问存储单元时，只能使用基地址寄存器(BX和BP)和变址寄存器(SI和DI)来作为地址偏移量的一部分，但在用32/64位寄存器寻址时，不存在上述限制，所有32位寄存器(EAX、EBX、ECX、EDX、ESI、EDI、EBP和ESP)都可以是地址偏移量的一个组成部分.
 
 > 基址寄存器是EBP或ESP时，默认的段寄存器是SS，否则，默认的段寄存器是DS
+
+> i/o端口寻址 : x86/x64实现了独立的64K I/O地址空间(0x0000~0xFFFF), in和out指令可访问这个i/o地址, 是cpu与外部接口进行通信的工具, 许多设备的底层驱动依赖in/out指令. 同时设备还可使用memory i/o(i/o内存映射)方式映射到物理地址空间, 比如vga设备的buffer就被这样处理了.
 
 
 ![32位地址偏移量进行寻址的有效地址计算公式](/misc/img/wwo4wjpgd1.gif)
 
 速度(快-> 慢): 立即寻址 -> 寄存器寻址 -> 直接寻址 -> 间接寻址 -> 索引寻址
 
-> x64新增rip寄存器其保存当前指令的下一条指令的地址，而x86的数据寻址只有绝对寻址.
+> x64新增rip寄存器其保存当前指令的下一条指令的地址(rip+disp32, 范围是rip±2G)，而x86的数据寻址只有绝对寻址.
+> rip寻址易于构建pic(position-independent code, 不依赖于位置的代码)代码.
 
 ### 64-bit寻址
 Intel:
@@ -100,6 +104,8 @@ AT&T:
 
     - RIP相对寻址 : `mov 0x0(%rip),%rax`
 - 索引寻址 : `movq string_start(, %ecx, 1), %eax` => `offset(base, index, width)`, addr = `base + %索引寄存器*比例因子 + offset`
+
+> x64使用48bit的virtual address, 高16是符号扩展, 它们要么全是1, 或全是0, 这种形式的地址被称为canonical地址, 符号扩展的其他形式都是不合法的. linux上刚好内核空间和用户空间各一半, 均是126T.
 
 ### 16 bit/单片机寻址
 - 立即寻址方式
@@ -148,6 +154,28 @@ AT&T:
     1. EA(源操作数的有效地址)=(BX)+(SI)+200H=2100H+0010H+200H=2310H
     1. addr=(DS)*16+EA=10000H*16+2310H=12310H // BX=>选择DS
     因此`MOV AX, [BX+SI+200H]`=`MOV AX, [12310H]`
+
+### 内存地址形式
+- logical addr(逻辑地址), 程序代码使用的地址, 最终会被cpu转为linear address.
+
+    逻辑地址分为两个部分: segment, offset. offset就是段内的effective address(有效地址).
+    segment是显示或隐式的. 逻辑地址在real mode下会经常使用到, 保护模式下在使用far pointer进行控制权的切换时也会用到.
+    offset是高级语言(比如c)中使用到的部分, 比如变量地址, 指针等.
+- linear address(线性地址), 不被代码直接使用, 由`段base+段内offset而来`. 在real模式即实模式和非分页的保护模式下就是物理地址)
+
+    real mode : linner addr = segment <<4 + offset = segment_base + offset.
+    64-bit : linear addr = offset // base强制为0.
+
+    64-bit模式下, 除FS,GS段可以使用非0值的base外, 其余的ES, CS, DS, SS段的base均强制为0.
+- physical address(物理地址)
+
+    linear address在分页机制下, 需经处理器分页映射转换为最终的物理地址.
+
+    物理地址分:
+    - 内存地址空间
+    - i/o地址空间
+
+    物理内存地址空间将容纳所有物理设备, 包括vga, rom, dram, pci, apic等, 这些设备以memory i/o的内存映射形式存在.
 
 ## 中断
 中断会中断正常的流程, 把控制权从应用程序转给kernel的中断处理程序.

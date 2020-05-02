@@ -2,6 +2,9 @@
 参考:
 - x86/x86_64 : [<<Intel® 64 and IA-32 ArchitecturesSoftware Developer’s ManualVolume 2>>的Chapter 3~5](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf)
 - [Linux 下 64 位汇编语言](https://blog.codekissyoung.com/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%84%E6%88%90/64%E4%BD%8DCPU%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80)
+- [x86/x64体系探索及编程#2.5]
+- [Linux 下 64 位汇编语言 for <<深入理解计算机系统>>](https://blog.codekissyoung.com/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%84%E6%88%90/64%E4%BD%8DCPU%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80)
+- [x86汇编指令集大全（带注释）](https://blog.csdn.net/bjbz_cxy/article/details/79467688)
 
 ## 基本算术
 编译器会用到四个基本算术计算指令: 加ADD, 减SUB,乘 IMUL 和 除IDIV.
@@ -47,7 +50,7 @@
 `and rax, 1`, rax&=1
 
 ### not
-对操作数的每一位取反
+对操作数的每一位取反, 但不影响rflags.
 
 ### or
 
@@ -107,7 +110,16 @@ JMP指令需要编译器生成目标标签(LABEL）. 标签必须唯一，并且
 ## lea
 lea(load effective address, 加载有效地址)，可以将有效地址传送到指定的的寄存器. 简单说, 就是C语言中的`&`.
 
-## mov[L]
+## 传送数据指令
+### mov[L]
 赋值
 
 `movq %rax, %rbx` => rbx = rax
+
+从较小的源传送到较大的目的地时，有两种类型的指令: 零拓展MOVZ 与 符号拓展MOVS.
+
+## SIMD
+SIMD单指令流多数据流(SingleInstruction Multiple Data,SIMD)是一种采用一个控制器来控制多个处理器，同时对一组数据（又称`数据向量`）中的每一个分别执行相同的操作从而实现空间上的并行性的技术.
+
+AVX(Advanced Vector Extensions) 是Intel的SSE延伸架构.
+FMA是Intel的AVX扩充指令集，如名称上熔合乘法累积（Fused Multiply Accumulate）的意思一样.
