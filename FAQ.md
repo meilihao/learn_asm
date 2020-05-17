@@ -102,3 +102,23 @@ $2 = 0xffffffffffffff
 
 ### invalid instruction suffix for `push' on x86_64
 在64位系统和32位系统的as命令对于某些汇编指令的处理支持不一样造成的，所以在文本开头加上`.code32`
+
+### end of file not at end of a line; newline inserted
+最后一行之前不是汇编代码, 比如
+```x86sam
+...
+BS_FileSysType:	.ascii 'FAT12   '
+
+```
+
+改为汇编代码即可, 比如追加一个symbol.
+
+#### loader.s:19: 错误：junk at end of line, first unrecognized character is `7'
+```x86asm
+BS_OEMName: .ascii 'MINEboot'
+```
+
+gas中`.ascii`的值应该使用`"`包裹
+
+### `byte ptr [sp]' is not a valid base/index expression
+[SP can't be used as a base or index register in the 16-bit addressing modes](https://stackoverflow.com/questions/34345583/invalid-base-index-expressions)

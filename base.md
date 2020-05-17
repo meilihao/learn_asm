@@ -87,6 +87,8 @@ gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇
 > rip寻址易于构建pic(position-independent code, 不依赖于位置的代码)代码.
 
 ### 64-bit寻址
+> 64-bit模式下, 除FS,GS段可以使用非0值的base外, 其余的ES, CS, DS, SS段的base均强制为0.
+
 Intel:
 - 立即寻址 : `mov rax, 1` => rax = 1
 - 寄存器寻址 : `mov rax, rbx`, 寄存器间
@@ -161,12 +163,10 @@ AT&T:
     逻辑地址分为两个部分: segment, offset. offset就是段内的effective address(有效地址).
     segment是显示或隐式的. 逻辑地址在real mode下会经常使用到, 保护模式下在使用far pointer进行控制权的切换时也会用到.
     offset是高级语言(比如c)中使用到的部分, 比如变量地址, 指针等.
-- linear address(线性地址), 不被代码直接使用, 由`段base+段内offset而来`. 在real模式即实模式和非分页的保护模式下就是物理地址)
+- linear address(线性地址), 是cpu通过段（Segment）机制控制下的形成的地址空间, 不被代码直接使用, 由`段base+段内offset而来`. 在real模式即实模式和非分页的保护模式下就是物理地址)
 
     real mode : linner addr = segment <<4 + offset = segment_base + offset.
     64-bit : linear addr = offset // base强制为0.
-
-    64-bit模式下, 除FS,GS段可以使用非0值的base外, 其余的ES, CS, DS, SS段的base均强制为0.
 - physical address(物理地址)
 
     linear address在分页机制下, 需经处理器分页映射转换为最终的物理地址.
@@ -176,6 +176,14 @@ AT&T:
     - i/o地址空间
 
     物理内存地址空间将容纳所有物理设备, 包括vga, rom, dram, pci, apic等, 这些设备以memory i/o的内存映射形式存在.
+
+
+
+> 页机制和段机制有一定程度的功能重复，但Intel公司为了向下兼容等目标，使得这两者一直共存.
+
+三种地址的关系如下：
+- 分段机制启动、分页机制未启动：逻辑地址--->段机制处理--->线性地址=物理地址
+- 分段机制和分页机制都启动：逻辑地址--->段机制处理--->线性地址--->页机制处理--->物理地址
 
 ## 中断
 中断会中断正常的流程, 把控制权从应用程序转给kernel的中断处理程序.

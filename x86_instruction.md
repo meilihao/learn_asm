@@ -21,9 +21,20 @@
 
 ### mul[L]
 无符号相乘
+1. 源操作数8bit, x*al = ax
+1. 源操作数16bit, x*ax = da:ax
+1. 源操作数32bit, x*eax = xdx:xax
+
 
 ### div[L]
 无符号除法
+
+一般格式为：div reg或div 内存单元，reg和内存单元存放的是除数，除数可分为8位和16为2种.
+被除数：默认放在AX或DX:AX，
+    - 除数为8位，被除数则为16位，默认在AX中存放
+    - 除数 为16位，被除数则为32位，在DX:AX中存放，DX存放高16位，AX存放低16位。
+
+结果：如果除数为8位，则AL存储除法操作的商，AH存储除法操作的余数；如果除数为16位，则AX存储除法操作的商，DX存储除法操作的余数
 
 `div %rbx, %rax` => rax/=rbx
 
@@ -74,6 +85,9 @@
 `sal rax, ${n}`, 算术左移(保留符号), n是移动次数
 
 ## 流控制: 比较和跳转
+参考:
+- [汇编语言转移指令规则汇总](https://blog.csdn.net/trochiluses/article/details/19355425)
+
 ### call
 函数调用
 
@@ -89,17 +103,29 @@
 
 JMP指令需要编译器生成目标标签(LABEL）. 标签必须唯一，并且是汇编文件内部私有，对外部不可见，除非有.globl指示. 按C语言的说法，汇编中没有修饰的标签是static的，.globl修饰的标签是extern的.
 
+- jc : 如果进位位被置位则跳转
+- jnc : 如果进位位没有置位则跳转
+
 ### cmp[L]
 参考:
 - [Intel Instruction Set (gas) # CMP](/misc/doc/Intel_Instruction_Set_gas.pdf)
 
 `cmpq $1, %rcx` => `if 1 ? rcx`, 比较结果的处理, 即有条件跳转:
 - je : 相等跳转
+
+    JE,JZ是完全相同的东西，只是不同的名称: 当ZF（`零`标志）等于1 时的条件跳转
 - jne : 不相等跳转
 - jg : 第二个数大于第一个则跳转
 - jge : 第二个数大于等于第一个则跳转
 - jl : 第二个数小于第一个则跳转
 - jle : 第二个数小于等于第一个则跳转
+- ja (jump above) : 大于则跳转 
+
+### repe
+repe是一个串操作前缀，它重复串操作指令，每重复一次ECX的值就减一.
+
+### cmpsb
+cmpsb是字符串比较指令，把ds:si/esi指向的数据与es:di/edi指向的数一个一个的进行比较. 每比较一次si, di会递增一次
 
 ## 栈 statck
 `PUSH rax`
@@ -117,6 +143,9 @@ lea(load effective address, 加载有效地址)，可以将有效地址传送到
 `movq %rax, %rbx` => rbx = rax
 
 从较小的源传送到较大的目的地时，有两种类型的指令: 零拓展MOVZ 与 符号拓展MOVS.
+
+### `xchg`
+xchg是两个寄存器，寄存器和内存变量之间内容的交换指令.
 
 ## SIMD
 SIMD单指令流多数据流(SingleInstruction Multiple Data,SIMD)是一种采用一个控制器来控制多个处理器，同时对一组数据（又称`数据向量`）中的每一个分别执行相同的操作从而实现空间上的并行性的技术.
