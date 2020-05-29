@@ -78,6 +78,8 @@ gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇
 
 > i/o端口寻址 : x86/x64实现了独立的64K I/O地址空间(0x0000~0xFFFF), in和out指令可访问这个i/o地址, 是cpu与外部接口进行通信的工具, 许多设备的底层驱动依赖in/out指令. 同时设备还可使用memory i/o(i/o内存映射)方式映射到物理地址空间, 比如vga设备的buffer就被这样处理了.
 
+> 从CPU的角度来看，访问设备只有内存映射I/O(Memory-mapped I/O)和端口I/O(Port I/O)两种，要么像内存一样访问，要么用一种专用的指令访问.
+
 
 ![32位地址偏移量进行寻址的有效地址计算公式](/misc/img/wwo4wjpgd1.gif)
 
