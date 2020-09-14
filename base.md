@@ -11,6 +11,13 @@
 
     实际的汇编代码, 一般都会缩进，以便和伪指令及symbol区分开来
 
+    汇编指令=操作码 + 操作数.
+
+    操作数分3种:
+    - 立即数 : 即常量
+    - 寄存器数 : 表示某个寄存器中保存的值
+    - 寄存器引用 : 根据计算出的有效地址来访问存储器的某个位置
+
 ## 语法
 ### AT&T汇编和Intel汇编差异
 gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇编器)；microsoft工具和intel的文档使用intel格式的汇编, [两者区别](http://timothyqiu.com/archives/difference-between-att-and-intel-asm-syntax/):
@@ -54,17 +61,108 @@ gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇
 
 具体汇编指令见[这里](assembler_directives.md).
 
-## 寄存器
+# 数据格式
+字节(Byte) : 8bit
+字(words) : 16bit
+双字(double words) : 32bit
+四字(quad words) : 64bit
+
+# 寄存器
 一些寄存器只有特殊指令可访问, 比如`rip`, `rflags`.
 
 在x86 32bit os上, 寄存器用前缀`e`标识, x86_64 64bit os上用前缀`r`标识.
 
-### 通用寄存器
-### 专用寄存器
-- rbp : 基址指针寄存器(base pointer), 用于访问函数的参数和局部变量的固定参照物, 是当前栈帧的`常量`.
-- rsp : 栈指针(Stack Pointer)寄存器, 存放指向当前栈帧的栈顶的指针
-- rip : 保存下一条指令的地址
-- rflags
+寄存器=通用寄存器 + 控制寄存器 + 段寄存器，　部分特殊寄存器未包含在该公式中．
+
+通用寄存器=数据寄存器 + 指针寄存器 + 变址寄存器.
+
+## 16 bit
+数据寄存器
+- AX (Accumulator) : 累加寄存器
+- BX (Base) : 基地址寄存器
+- CX (Count) : 计数器寄存器
+- DX (Data) : 数据寄存器
+
+指针寄存器
+- SP(Stack Pointer) : 栈指针寄存器
+- BP(Base Pointer) : 基指针寄存器
+
+变址寄存器
+- SI : (Source Index) : 源变地寄存器
+- DI : (Destination Index) : 目的变址寄存器
+
+控制寄存器
+- IP (Instruction Pointer) : 指令指针寄存器
+- FLAG : 标志寄存器
+
+段寄存器
+- CS (Code Segment) : 代码段寄存器
+- DS (Data Segment) : 数据段寄存器
+- SS (Stack Segment) : 堆栈段寄存器
+- ES (Extra Segment) : 附加段寄存器
+
+数据寄存器可当做两个独立的8bit寄存器使用, 分别用${X}H/${X}L表示, 其他寄存器不可拆分.
+
+## 32 bit
+数据寄存器
+- EAX (Accumulator) : 累加寄存器
+- EBX (Base) : 基地址寄存器
+- ECX (Count) : 计数器寄存器
+- EDX (Data) : 数据寄存器
+
+指针寄存器
+- ESP(Stack Pointer) : 栈指针寄存器
+- EBP(Base Pointer) : 基指针寄存器
+
+变址寄存器
+- ESI : (Source Index) : 源变地寄存器
+- EDI : (Destination Index) : 目的变址寄存器
+
+控制寄存器
+- EIP (Instruction Pointer) : 指令指针寄存器
+- EFLAG : 标志寄存器
+
+段寄存器
+- CS (Code Segment) : 代码段寄存器
+- DS (Data Segment) : 数据段寄存器
+- SS (Stack Segment) : 堆栈段寄存器
+- ES (Extra Segment) : 附加段寄存器
+- FS : 附加段寄存器
+- GS : 附加段寄存器
+
+数据寄存器可当做两个独立的8bit寄存器或一个16bit寄存器使用, 分别用${X}H/${X}L和${X}X表示.
+
+在32bit cpu中, 32bit数据寄存器不仅可以传送数据, 暂存数据保存算术逻辑运算结果, 还可以作为指针寄存器, 因此这些32bit寄存器更具通用性.
+
+经常使用的是CS和SS. 比如指令都存储在代码段, 在定位一个指令时, 使用CS:EIP来指明它的内存地址, 此时EIP表示CS段的段内相对偏移地址.
+
+## 64bit
+数据寄存器
+- RAX (Accumulator) : 累加寄存器
+- RBX (Base) : 基地址寄存器
+- RCX (Count) : 计数器寄存器
+- RDX (Data) : 数据寄存器
+- R8-R15
+
+指针寄存器
+- RSP(Stack Pointer) : 栈指针寄存器,  存放指向当前栈帧的栈顶的指针
+- RBP(Base Pointer) : 基指针寄存器, 用于访问函数的参数和局部变量的固定参照物, 是当前栈帧的`常量`.
+
+变址寄存器
+- RSI : (Source Index) : 源变地寄存器
+- RDI : (Destination Index) : 目的变址寄存器
+
+控制寄存器
+- RIP (Instruction Pointer) : 指令指针寄存器, 保存下一条指令的地址
+- RFLAG : 标志寄存器
+
+段寄存器
+- CS (Code Segment) : 代码段寄存器
+- DS (Data Segment) : 数据段寄存器
+- SS (Stack Segment) : 堆栈段寄存器
+- ES (Extra Segment) : 附加段寄存器
+- FS : 附加段寄存器
+- GS : 附加段寄存器
 
 ## 寻址
 参考:
@@ -94,10 +192,11 @@ gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇
 Intel:
 - 立即寻址 : `mov rax, 1` => rax = 1
 - 寄存器寻址 : `mov rax, rbx`, 寄存器间
-- 直接寻址 : `mov rax, [1]`, 将地址1开始的内容(8B)放入rax.
-- 间接寻址 : `mov rbx, [rax]`, 从寄存器指定的地址加载值
+- 直接寻址 : `mov rax, [1]`, 将地址1开始的内容(8B)放入rax => rax=*(int64*)0x1
+- 间接寻址 : `mov rbx, [rax]`, 从寄存器指定的地址加载值 =>  rax=*(int64*)rax
 
     - RIP相对寻址 : `mov rax, [rip]`
+- 变址寻址 : `mov rdx, [rbx+4]` => rdx = *(int64*)(rbx+4)
 - 索引寻址 : `mov rax, QWORD PTR [rcx*1 + BASE + string_start]`, addr = `[INDEX * WIDTH + BASE + OFFSET]`
 
 AT&T:
@@ -107,7 +206,19 @@ AT&T:
 - 间接寻址 : `movq (%rax), %rbx`, 从寄存器指定的地址加载值
 
     - RIP相对寻址 : `mov 0x0(%rip),%rax`
+- 变址寻址 : `movq 4(%rbx), %rdx` => rdx = *(int64*)(rbx+4)
 - 索引寻址 : `movq string_start(, %ecx, 1), %eax` => `offset(base, index, width)`, addr = `base + %索引寄存器*比例因子 + offset`
+
+pushq %rax= `subq $8, %rsp` + `movq %rax, (%rsp)`, 使用subq是因为栈是向下增长的.
+popq %rax= `movq (%rsp), %rax` + `addq $8, %rsp`
+call 0x12345 = `pushq %rip` + `movq 0x123456, %rip`, 实际call由硬件一次性完成(处于安全考虑rip无法直接使用和修改), 仅是逻辑步骤上可拆分成这两个步骤.
+ret = popq %rip, 同上由硬件一次性完成, 仅是逻辑步骤相同.
+
+enter和leave可以理解为宏指令, leave用于撤销函数堆栈; enter用于建立一个空函数堆栈:
+- leave = `movq %rbp, %rsp` + `popq %rbp`
+- enter = `pushq %rbp` + `movq %rsp, %rbp` 
+
+> rip不能被程序直接修改, 只能通过专用指令(call, ret, jmp)间接修改.
 
 > x64使用48bit的virtual address, 高16是符号扩展, 它们要么全是1, 或全是0, 这种形式的地址被称为canonical地址, 符号扩展的其他形式都是不合法的. linux上刚好内核空间和用户空间各一半, 均是126T.
 
