@@ -39,5 +39,14 @@ int main() {
 		);
 	printTime(tt);
 
+	tt = 0;
+	asm volatile(
+		"movq $201,%%rax\n\t"
+		"xorq %%rdi,%%rdi\n\t"
+		"syscall\n\t"
+		:"=a"(tt) // 直接将返回值rax内容赋值给tt, 比上面简洁
+		);
+	printTime(tt);
+
 	return 1; 
 }
