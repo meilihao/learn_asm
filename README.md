@@ -40,7 +40,8 @@ AT&T语法是一种相当老的语法，由GAS和一些老式汇编器使用；N
 
 ### Linux 32位系统调用和64位系统调用的区别
 参考:
-- [Linux 系统调用权威指南(2016)](http://arthurchiao.art/blog/system-call-definitive-guide-zh/) 翻译自[The Definitive Guide to Linux System Calls](https://blog.packagecloud.io/eng/2016/04/05/the-definitive-guide-to-linux-system-calls/)
+- [*Linux syscall过程分析](https://cloud.tencent.com/developer/article/1492374)
+- [*Linux 系统调用权威指南(2016)](http://arthurchiao.art/blog/system-call-definitive-guide-zh/) 翻译自[The Definitive Guide to Linux System Calls](https://blog.packagecloud.io/eng/2016/04/05/the-definitive-guide-to-linux-system-calls/)
 
 - 系统调用号(syscall)不同
 
@@ -59,7 +60,9 @@ AT&T语法是一种相当老的语法，由GAS和一些老式汇编器使用；N
     **然而，徒手写汇编来调系统调用是一次很好的学习方式.**
 - 调用方法不同
     
-    在32位下用int 0x80中断(是软中断, 对应中断函数是ia32_syscall@`arch/x86/ia32/ia32entry.S`)进行系统调用，而64位下需要用syscall指令进行系统调用
+    [在32位下用int 0x80中断(是软中断, 对应中断函数是ia32_syscall@`arch/x86/ia32/ia32entry.S`)进行系统调用](http://arthurchiao.art/blog/system-call-definitive-guide-zh/)，而[64位下需要用syscall指令进行系统调用](http://arthurchiao.art/blog/system-call-definitive-guide-zh/)
+
+    > 64bit的syscall是为了加速系统调用所引入的新指令，通过引入新的 MSR 来存放内核态的代码和栈的段号和偏移量，从而实现快速跳转.
 
     在x86_64上使用`int 0x80`会导致发生segfault(原因: 变量地址是64bit, 用0x80号中断调用时仅用到32bit地址, 高32bit丢失, 导致内存访问时地址越界). `syscall`可参考[这里](https://stackoverflow.com/questions/12806584/what-is-better-int-0x80-or-syscall-in-32-bit-code-on-linux).
 
