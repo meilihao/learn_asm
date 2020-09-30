@@ -89,7 +89,8 @@
 - [汇编语言转移指令规则汇总](https://blog.csdn.net/trochiluses/article/details/19355425)
 
 ### call
-函数调用
+函数调用, 是一条近址相对位移调用指令(Call near, relative, displacement relative to next instruction). 未链接时, 后面紧跟调用指令的下一条指令的偏移量. 在没有重定位前相对偏移量是0x
+; 链接后call <0x具体地址>.
 
 `call ${function_name}`
 
