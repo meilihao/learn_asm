@@ -1,6 +1,6 @@
 # tool
 ## nasm
-nasm是可以在windows、linux等系统下使用的汇编器, 而masm是微软专门为windows下汇编而写的，故而**推荐使用nasm或gcc的as**.
+nasm是可以在windows、linux等系统下使用的汇编器, 大小写敏感; 而masm是微软专门为windows下汇编而写的, 大小写不敏感. 故而**推荐使用nasm或gcc的as**.
 
 nasm注意点:
 1. 它使用Intel语法
