@@ -18,6 +18,8 @@
     - 寄存器数 : 表示某个寄存器中保存的值
     - 寄存器引用 : 根据计算出的有效地址来访问存储器的某个位置
 
+    数据传输指令(data transfer instruction): 在存储器和寄存器间移动数据的命令.
+
 ## 语法
 ### AT&T汇编和Intel汇编差异
 gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇编器)；microsoft工具和intel的文档使用intel格式的汇编, [两者区别](http://timothyqiu.com/archives/difference-between-att-and-intel-asm-syntax/):
@@ -194,6 +196,44 @@ gcc, objdump默认使用AT&T格式的汇编, 也叫GAS格式(Gnu ASembler GNU汇
 > x64新增rip寄存器其保存当前指令的下一条指令的地址(rip+disp32, 范围是rip±2G)，而x86的数据寻址只有绝对寻址.
 > rip寻址易于构建pic(position-independent code, 不依赖于位置的代码)代码.
 
+### 实模式与保护模式的来历
+最早期的8086 CPU只有一种工作方式, 那就是实模式, 而且数据总线为16位, 地址总线为20位, 实模式下所有寄存器都是16位. 而从80286开始就有了部分保护模式, 从80386开始完全实现了保护模式与实模式的转化, 此时CPU数据总线和地址总线均为32位, 而且寄存器都是32位. 但80386以及现在的奔腾，酷睿等等CPU为了向前兼容都保留了实模式, 现代操作系统在刚加电时首先运行在实模式下, 然后再切换到保护模式下运行.
+
+8086: 寻址能力: 2^20=1M; 段大小: 2^16=64k
+
+### 段描述表寄存器
+分:
+- 全局性段描述表寄存器GDTR（Global Descriptor Table Register ）
+- 局部性段描述表寄存器LDTR（Local Descriptor Table Register ）
+
+段寄存器(2B)的字段含义:
+- 15-3 : 2^13=8192, 又因为TI, 因此存在`8192*2=16384`个段描述符. 可从全局或局部描述符表项中选择一个描述符
+- 2: TI, 选择使用哪一种段描述表寄存器, 0用GDTR, 1用LDTR
+- 1-0 : RPL表示请求特权级, 00最高, 11最低
+
+    80386中**四个特权级别，0级最高，3级最低**. 每一条指令都有其适用级别, **通常用户程序都是3级，一般程序的运行级别由代码段的局部描述项DPL字段决定，这是由0级状态下的的内核设定的**. 当**改变一个寄存器内容时，CPU对权限进行检查，确保该程序的执行权限和段寄存器所制定要求的权限RPL所要访问的内存的权限DPL**
+
+段内偏移地址为32位值, 所以一个段最大可达4GB, 这样`16384*4GB＝64TB`, 这就是所谓的64TB最大寻址能力，也即逻辑地址.
+
+段描述符表项(8B)的字段含义(伪代码):
+```c
+typedef struct
+{
+ unsigned  int  base24_31:8;        /*基地址的高8位 */
+ unsigned  int  g:1;                /* granularity，表段的长度单位，0表示字节，1表示 4KB */
+ unsigned  int  d_b:1;              /* default operation size ，存取方式，0表示16位，1表示32位 */
+ unsigned  int  unused:1;           /*固定设置成0 */
+ unsigned  int  avl:1;              /* avalaible，可供系统软件使用*/
+ unsigned  int  seg_limit_16_19:4;  /* 段长度的高4位 */
+ unsigned  int  p:1;                /* segment present，为0时表示该段不在内存中*/
+ unsigned  int  dpl:2;              /* Descriptor privilege level，访问本段所需的权限 */
+ unsigned  int  s:1;                /* 描述项类型，1表示系统，0表示代码或数据 */
+ unsigned  int  type:4;             /* 段的类型，与S标志位一起使用*/
+ unsigned  int  base_0_23:24;       /* 基地址的低24位 */
+ unsigned  int  seg_limit_0_15:16;  /* 段长度的低16位 */
+ };
+```
+
 ### 64-bit寻址
 > 64-bit模式下, 除FS,GS段可以使用非0值的base外, 其余的ES, CS, DS, SS段的base均强制为0.
 
@@ -279,16 +319,22 @@ enter和leave可以理解为宏指令, leave用于撤销函数堆栈; enter用�
     因此`MOV AX, [BX+SI+200H]`=`MOV AX, [12310H]`
 
 ### 内存地址形式
-- logical addr(逻辑地址), 程序代码使用的地址, 最终会被cpu转为linear address.
+- logical addr(逻辑地址): 无论在实模式或是保护模式下, 段内偏移地址又称为有效地址, 也称为逻辑地址. 这是程序员可
+见的地址, 最终会被cpu转为linear address.
 
     逻辑地址分为两个部分: segment, offset. offset就是段内的effective address(有效地址).
     segment是显示或隐式的. 逻辑地址在real mode下会经常使用到, 保护模式下在使用far pointer进行控制权的切换时也会用到.
-    offset是高级语言(比如c)中使用到的部分, 比如变量地址, 指针等.
+    
+    最终的地址是由段基址和段内偏移地址组合而成的. 由于段基址已经有默认的值, 要么是在实模式下的默认段寄存器中, 要么是在保护模式下的默认段选择子寄存器指向的段描述符中, 所以只要给出段内偏移地址就行了. 即实模式下由`段基地址+段内偏移`组成;保护模式下由`段选择符+段内偏移`组成.
 - linear address(线性地址), 是cpu通过段（Segment）机制控制下的形成的地址空间, 不被代码直接使用, 由`段base+段内offset而来`. 在real模式即实模式和非分页的保护模式下就是物理地址)
 
     real mode : linner addr = segment <<4 + offset = segment_base + offset.
     64-bit : linear addr = offset // base强制为0.
+
+    在保护模式下, `段基址＋段内偏移地址`称为线性地址, 不过, 此时的段基址已经不再是真正的地址了, 而是一个称为选择子的东西.  它本质是个索引, 类似于数组下标, 通过这个索引便能在 GDT 中找到相应的段描述符, 在该描述符中记录了该段的起始、大小等信息, 这样便得到了段基址. 若没有开启地址分页功能, 此线性地址就被当作物理地址来用, 可直接访问内存;  若开启了分页功能, 此线性地址又多了一个名字, 就是虚拟地址. 虚拟地址要经过 CPU MCU转换成具体的物理地址, 这样 CPU才能将其送上地址总线去访问内存.
 - physical address(物理地址)
+
+    物理地址就是物理内存真正的地址. 不管在什么模式下, 不管什么虚拟地址、线性地址, CPU 最终都要以物理地址去访问内存.
 
     linear address在分页机制下, 需经处理器分页映射转换为最终的物理地址.
 
