@@ -206,6 +206,27 @@ ref:
 
 8086: 最大寻址能力: 2^20=1M; 段最大大小: 2^16=64k, 但不一定就是64KB.
 
+实模式和保护模式主要区别就是对内存地址的访问方式不同.
+
+#### 实模式下的内存布局(1M地址空间)
+|起始  |结 束 |大小 | 用 途|
+|FFFF0|FFFFF | 16B| BIOS 入口地址, 此地址也属于 BIOS 代码, 同样属于顶部的640KB. 只是为了强调其入口地址才单独贴出来．此处 16 字节的内容是跳转指令jmp f000:e05b|
+|F0000| FFFEF| 64KB-16B|系统 BIOS 范围是 F0000～FFFFF 共 640KB, 为说明入口地址, 将最上面的 16字节从此处去掉了, 所以此处终止地址是 OXFFFEF|
+|C8000| EFFFF| 160KB |映射硬件适配器的 ROM 或内存映射式I/O|
+|C0000|C7FFF | 32KB| 显示适配器 BIOS|
+|B8000| BFFFF| 32KB 用于文本模式显示适配器|
+|B0000|B7FFF |32KB 用于黑 白显示适配器|
+|A0000| AFFFF| 64KB| 用于彩色显示适配器|
+|9FC00| 9FFFF| 1KB| EBDA ( Extended BIOS Data Area ） 扩展 BIOS 数据 区|
+|7E00 |9FBFF | 622080B 约 608KB |可用 区域|
+|7C00 |7DFF  | 512B| MBR 被 BIOS 加载到此处，共 512 字节|
+|500  |7BFF  | 30464B 约 30KB| 可用 区域|
+|400  |4FF   | 2568| BIOS Data Area (BIOS 数据区）|
+|000  |3FF   | 1KB |Intenupt Vector Table （ 中断向量表 ）|
+
+0~0x9FFFF(640K)是DRAM.
+F0000～FFFFF(64K)是BIOS ROM.
+
 ### 段描述表寄存器
 分:
 - 全局性段描述表寄存器GDTR（Global Descriptor Table Register ）
