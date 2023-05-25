@@ -26,6 +26,7 @@ nasm注意点:
 # objdump -d -M intel a.out # 也是以Intel语法输出
 # gcc -S m.c # 默认以AT&T语法输出
 # gcc -S -masm=intel m.c # 以Intel语法输出, `-masm`表示以哪种asm方言进行输出
+# ndisasm boot.bin [-o 0x7c00] # 反汇编, `-o`指定一个起始地址
 ```
 
 example:

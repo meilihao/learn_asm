@@ -1,5 +1,7 @@
 *.o
 *.elf
 *.out
+*.bin
+*.img
 core
 example/5.out.txt
