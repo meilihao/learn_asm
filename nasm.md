@@ -3,7 +3,11 @@
 - bits: 指定运行模式
 
 	操作数大小反转前缀 Ox66 和寻址方式反转前缀 Ox67, 用于临时将当前运行模式下的操作数大小和寻址方式转变成另外一种模式下的操作数大小及寻址方式.
-- equ
+- db: define type, 定义1B变量
+- dd: define double-word, 定义双字(4B)变量
+- dq: define quad-word, 定义8B变量
+- dw:  define word, 定义单字(2B)变量
+- equ: 等于
 - `%include`: 预处理指令, 类似c的include
 - org : 根据org指令中指定的偏移, 计算段内数据的各种偏移
 

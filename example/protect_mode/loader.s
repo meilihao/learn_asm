@@ -1,25 +1,25 @@
-   %include "boot.inc"
+   %include "boot.inc" ; from https://github.com/yifengyou/os-elephant/blob/master/code/c04/a/boot/loader.S
    section loader vstart=LOADER_BASE_ADDR
-   LOADER_STACK_TOP equ LOADER_BASE_ADDR
+   LOADER_STACK_TOP equ LOADER_BASE_ADDR; LOADER_STACK_TOP用于loader 在保护模式下的栈
    jmp loader_start					; 此处的物理地址是:
    
 ;构建gdt及其内部的描述符
-   GDT_BASE:   dd    0x00000000 
+   GDT_BASE:   dd    0x00000000 ; GDT_BASEgdt的起始地址, 第 0 个段描述符没用.
 	       dd    0x00000000
 
-   CODE_DESC:  dd    0x0000FFFF 
+   CODE_DESC:  dd    0x0000FFFF ; 代码段描述符. seg_limit=0xFFFFF*4k=4G
 	       dd    DESC_CODE_HIGH4
 
-   DATA_STACK_DESC:  dd    0x0000FFFF
+   DATA_STACK_DESC:  dd    0x0000FFFF ; 数据和栈段描述符
 		     dd    DESC_DATA_HIGH4
 
-   VIDEO_DESC: dd    0x80000007	       ;limit=(0xbffff-0xb8000)/4k=0x7
+   VIDEO_DESC: dd    0x80000007	       ; 显存段描述符 limit=(0xbffff-0xb8000)/4k=0x7
 	       dd    DESC_VIDEO_HIGH4  ; 此时dpl已改为0
 
    GDT_SIZE   equ   $ - GDT_BASE
    GDT_LIMIT   equ   GDT_SIZE -	1 
    times 60 dq 0					 ; 此处预留60个描述符的slot
-   SELECTOR_CODE equ (0x0001<<3) + TI_GDT + RPL0         ; 相当于(CODE_DESC - GDT_BASE)/8 + TI_GDT + RPL0
+   SELECTOR_CODE equ (0x0001<<3) + TI_GDT + RPL0         ; 相当于(CODE_DESC - GDT_BASE)/8 + TI_GDT + RPL0. `<<3`是因为`TI_GDT + RPL0`
    SELECTOR_DATA equ (0x0002<<3) + TI_GDT + RPL0	 ; 同上
    SELECTOR_VIDEO equ (0x0003<<3) + TI_GDT + RPL0	 ; 同上 
 
@@ -29,7 +29,36 @@
 	    dd  GDT_BASE
    loadermsg db '2 loader in real.'
 
-   loader_start:
+ loader_start:
+
+;打印字符，"2 LOADER"说明loader已经成功加载
+; 输出背景色绿色，前景色红色，并且跳动的字符串"1 MBR"
+mov byte [gs:160],'2'
+mov byte [gs:161],0xA4     ; A表示绿色背景闪烁，4表示前景色为红色
+
+mov byte [gs:162],' '
+mov byte [gs:163],0xA4
+
+mov byte [gs:164],'L'
+mov byte [gs:165],0xA4   
+
+mov byte [gs:166],'O'
+mov byte [gs:167],0xA4
+
+mov byte [gs:168],'A'
+mov byte [gs:169],0xA4
+
+mov byte [gs:170],'D'
+mov byte [gs:171],0xA4
+
+mov byte [gs:172],'E'
+mov byte [gs:173],0xA4
+
+mov byte [gs:174],'R'
+mov byte [gs:175],0xA4
+
+
+
 
 ;------------------------------------------------------------
 ;INT 0x10    功能号:0x13    功能描述:打印字符串
@@ -51,8 +80,8 @@
    mov	 bp, loadermsg           ; ES:BP = 字符串地址
    mov	 cx, 17			 ; CX = 字符串长度
    mov	 ax, 0x1301		 ; AH = 13,  AL = 01h
-   mov	 bx, 0x001f		 ; 页号为0(BH = 0) 蓝底粉红字(BL = 1fh)
-   mov	 dx, 0x1800		 ;
+   mov	 bx, 0x00A4		 ; 页号为0(BH = 0) 蓝底粉红字(BL = 1fh). 这里换成0xA4, 因为1fh不明显
+   mov	 dx, 0x1800		 ; 0x18=24, 即屏幕最后一行
    int	 0x10                    ; 10h 号中断
 
 ;----------------------------------------   准备进入保护模式   ------------------------------------------
@@ -63,7 +92,7 @@
 
    ;-----------------  打开A20  ----------------
    in al,0x92
-   or al,0000_0010B
+   or al,0000_0010B    ; 打开 A20Gate 的方式: 将端口 Ox92 的第 1 位置 1 即可
    out 0x92,al
 
    ;-----------------  加载GDT  ----------------
@@ -74,8 +103,7 @@
    mov eax, cr0
    or eax, 0x00000001
    mov cr0, eax
-
-   ;jmp dword SELECTOR_CODE:p_mode_start	     ; 刷新流水线，避免分支预测的影响,这种cpu优化策略，最怕jmp跳转，
+   ; 下面开始进入16位保护模式
    jmp  SELECTOR_CODE:p_mode_start	     ; 刷新流水线，避免分支预测的影响,这种cpu优化策略，最怕jmp跳转，
 					     ; 这将导致之前做的预测失效，从而起到了刷新的作用。
 
@@ -89,6 +117,6 @@ p_mode_start:
    mov ax, SELECTOR_VIDEO
    mov gs, ax
 
-   mov byte [gs:160], 'P'
+   mov byte [gs:320], 'P' ; 320, 错开其他打印信息
 
    jmp $
