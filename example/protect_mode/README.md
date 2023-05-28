@@ -87,4 +87,4 @@ qemu-system-i386上该问题出现概率更更小了. 理论上关了中断, qem
 1. 注释`times 60 dq 0`
 1. `lgdt`前加`cli`
 
-经上述两个步骤调整loader.s后, run.sh也能稳定停在一个界面, **怀疑是lgdt加载空selector(非第一个是0)导致异常**.
+经上述两个步骤调整loader.s后, run.sh也能稳定停在一个界面, **怀疑是lgdt加载空selector(非第一个是0)导致异常**, 预计[qemu源码](https://github.com/qemu/qemu/blob/ac84b57b4d74606f7f83667a0606deef32b2049d/target/i386/tcg/translate.c#L6017)(这里仅是一个可能的代码位置)里有答案.

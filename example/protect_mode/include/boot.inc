@@ -19,7 +19,7 @@ DESC_DPL_3  equ		   11_0000000000000b
 DESC_S_CODE equ		     1_000000000000b
 DESC_S_DATA equ	  DESC_S_CODE
 DESC_S_sys  equ		     0_000000000000b
-DESC_TYPE_CODE  equ	      1010_00000000b	;x=1,c=0,r=0,a=0 代码段是可执行的,非依从的,不可读的,已访问位a清0.  
+DESC_TYPE_CODE  equ	      1010_00000000b	;x=1,c=0,r=1,a=0 代码段是可执行的,非依从的, 可读的,已访问位a清0.  有些资料显示r=0???
 DESC_TYPE_DATA  equ	      0010_00000000b	;x=0,e=0,w=1,a=0 数据段是不可执行的,向上扩展的,可写的,已访问位a清0.
 
 DESC_CODE_HIGH4 equ (0x00 << 24) + DESC_G_4K + DESC_D_32 + DESC_L + DESC_AVL + DESC_LIMIT_CODE2 + DESC_P + DESC_DPL_0 + DESC_S_CODE + DESC_TYPE_CODE + 0x00
