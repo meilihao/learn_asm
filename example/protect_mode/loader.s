@@ -14,11 +14,10 @@
 		     dd    DESC_DATA_HIGH4
 
    VIDEO_DESC: dd    0x80000007	       ; 显存段描述符 limit=(0xbffff-0xb8000)/4k=0x7
-	       dd    DESC_VIDEO_HIGH4  ; 此时dpl已改为0
-
-   GDT_SIZE   equ   $ - GDT_BASE
-   GDT_LIMIT   equ   GDT_SIZE -	1 
+	       dd    DESC_VIDEO_HIGH4  ; 此时dpl已改为0 
    times 60 dq 0					 ; 此处预留60个描述符的slot
+   GDT_SIZE   equ   $ - GDT_BASE ; 应该在times后, 原始loader.S应该是错误的, 因为gdt不连续了
+   GDT_LIMIT   equ   GDT_SIZE -  1
    SELECTOR_CODE equ (0x0001<<3) + TI_GDT + RPL0         ; 相当于(CODE_DESC - GDT_BASE)/8 + TI_GDT + RPL0. `<<3`是因为`TI_GDT + RPL0`
    SELECTOR_DATA equ (0x0002<<3) + TI_GDT + RPL0	 ; 同上
    SELECTOR_VIDEO equ (0x0003<<3) + TI_GDT + RPL0	 ; 同上 
