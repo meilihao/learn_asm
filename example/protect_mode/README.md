@@ -79,6 +79,12 @@ Next at t=82472612
     jmp PModePause
 ```
 
-qemu-system-i386上该问题出现概率更更小了. 理论上关了中断, qemu-system-i386 cpu应该不会重启才对, why???
+qemu-system-i386上该问题出现概率更更小了. 理论上关了中断, qemu-system-i386 cpu应该不会重置才对.
 
 > qemu-system-i386调试命令: `qemu-system-i386 -hda c.img -d cpu_reset,int -no-reboot`
+
+逐步调整loader.s和loader1.s对比发现:
+1. 注释`times 60 dq 0`
+1. `lgdt`前加`cli`
+
+经上述两个步骤调整loader.s后, run.sh也能稳定停在一个界面, **怀疑是lgdt加载空selector(非第一个是0)导致异常**.
