@@ -1,4 +1,6 @@
 # README
+ref:
+- [9.9.1 Switching to Protected Mode](https://www.intel.sg/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf)
 
 ## FAQ
 ### `qemu-system-i386/qemu-system-x86_64 -hda hd.img`启动后, 没停在显示出`P`的界面, 而是屏幕内容来回跳动, 最终停在一个界面上
