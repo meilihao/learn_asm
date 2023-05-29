@@ -7,12 +7,15 @@ ref:
 - run1.sh: 来自网络, 用于对比发现loader.s的问题
 - run2.sh: 修正`times 60 dq 0` + `cli`后的run.sh
 
-	也会出现run.sh问题, 概率比run.sh小
+	也会出现run.sh问题, 概率比run.sh小, 家里小米笔记本不容易出现, 但公司小主机上容易出现.
 
 	将所有变量定义移到文件末尾, 变成loader_ok.s, 连续执行run_ok.sh 20次, 问题未出现.
 - run_mem.sh: 带探测内存大小的loader, 有问题
 
-	用修正后的loader2.s+探测内存大小的代码, 结果出现run.sh问题, 挺频繁的
+	用修正后的loader2.s+探测内存大小的代码, 结果出现run.sh问题, 挺频繁的.
+
+	通过`qemu-system-i386 -hda hd.img -d cpu_reset,int -no-reboot -S -s -monitor tcp::4444,server,nowait`+`gdb -ex 'set tdesc filename ./target.xml' -ex 'set disassembly-flavor intel' -ex 'set disassemble-next-line on' -ex 'target remote :1234' -ex 'c'`分析日志. 有时qemu-system-i386没输出异常, 突然就退出了; 有时会打印很多`check_exception old: 0xffffffff new 0x6`但退出, 对比这两种日志, 就是第二种多了很多的`check_exception old: 0xffffffff new 0x6`, 其他日志都一样. 对比第一种日志和loader_mem_ok.s的日志, 完全一样.
+
 	将所有变量定义移到文件末尾, 变成loader_mem_ok.s, 连续执行run_mem_ok.sh 20次, 问题未出现.
 
 ## FAQ
