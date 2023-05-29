@@ -105,6 +105,7 @@ mov byte [gs:175],0xA4
    ; 下面开始进入16位保护模式
    jmp  SELECTOR_CODE:p_mode_start	     ; 刷新流水线，避免分支预测的影响,这种cpu优化策略，最怕jmp跳转，
 					     ; 这将导致之前做的预测失效，从而起到了刷新的作用。
+                    ; jmp后没有指定dword原因, 虽然已进入保护模式但是处于16位保护模式, 因为SELECTOR_CODE还未载入cpu, 当前段描述符缓冲寄存器中的 D 位是0, 因此操作数是 16 位, 故可省略dword
 
 [bits 32]
 p_mode_start:

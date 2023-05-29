@@ -301,7 +301,7 @@ typedef struct
 {
  unsigned  int  base24_31:8;        /* 基地址的高8位 */
  unsigned  int  g:1;                /* granularity(颗粒度)，表示段的长度单位，0表示字节，1表示 4KB */
- unsigned  int  d_b:1;              /* default operation size ，存取方式，0表示16位，1表示32位. 代码段时是D位, 对应使用ip还是eip; 栈段时是位, 对应使用sp还是esp */
+ unsigned  int  d_b:1;              /* default operation size ，存取方式，0表示16位，1表示32位. 代码段时是D位, 对应使用ip还是eip; 栈段时是b位, 对应使用sp还是esp */
  unsigned  int  l:1;                /* 用来设置是否是 64 位代码段: 32位代码段固定设置成0, 64位代码段位1 */
  unsigned  int  avl:1;              /* avalaible，可供os自由使用*/
  unsigned  int  seg_limit_16_19:4;  /* 段长度的高4位 */
