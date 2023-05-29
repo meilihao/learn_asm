@@ -118,7 +118,7 @@ rd_disk_m_16:
       in ax,dx
       mov [bx],ax      ; bx初始值是LOADER_BASE_ADDR
       add bx,2		  
-      loop .go_on_read ; loop会cx-=1, 并判断cx是否为0进而继续循环还是退出
+      loop .go_on_read ; loop会cx-=1, 并判断cx是否为0进而继续循环还是往下走
       ret
 
    times 510-($-$$) db 0

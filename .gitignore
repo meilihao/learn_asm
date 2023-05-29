@@ -3,5 +3,6 @@
 *.out
 *.bin
 *.img
+*.log
 core
 example/5.out.txt

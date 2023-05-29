@@ -2,6 +2,19 @@
 ref:
 - [9.9.1 Switching to Protected Mode](https://www.intel.sg/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf)
 
+## example
+- run.sh: 第一版loader, 有问题, 见FAQ的"`qemu-system-i386/qemu-system-x86_64 -hda hd.img`启动后, 没停在显示出`P`的界面, 而是屏幕内容来回跳动, 最终停在一个界面上"
+- run1.sh: 来自网络, 用于对比发现loader.s的问题
+- run2.sh: 修正`times 60 dq 0` + `cli`后的run.sh
+
+	也会出现run.sh问题, 概率比run.sh小
+
+	将所有变量定义移到文件末尾, 变成loader_ok.s, 连续执行run_ok.sh 20次, 问题未出现.
+- run_mem.sh: 带探测内存大小的loader, 有问题
+
+	用修正后的loader2.s+探测内存大小的代码, 结果出现run.sh问题, 挺频繁的
+	将所有变量定义移到文件末尾, 变成loader_mem_ok.s, 连续执行run_mem_ok.sh 20次, 问题未出现.
+
 ## FAQ
 ### `qemu-system-i386/qemu-system-x86_64 -hda hd.img`启动后, 没停在显示出`P`的界面, 而是屏幕内容来回跳动, 最终停在一个界面上
 ref:
@@ -68,18 +81,11 @@ Next at t=82472612
 
 在16位实模式下的中断由BIOS处理，进入保护模式后，中断将交给中断描述符表IDT里规定的函数处理，在刚进入保护模式时IDTR寄存器的初始值为0，一旦发生中断（例如BIOS的时钟中断）就将导致CPU发生异常，所以需要首先屏蔽中断
 
-在loader.s `jmp loader_start`前加[`cli`](https://mp.weixin.qq.com/s/VGhpbZaeyVwq3Ghs2E6eEw), bochs测试未发现cpu重置现象, 但qemu-system-i386还是存在, 但概率变小.
+在loader.s `jmp loader_start`前加[`cli`](https://mp.weixin.qq.com/s/VGhpbZaeyVwq3Ghs2E6eEw), bochs测试未发现cpu重置现象, 但qemu-system-i386还是存在该问题.
 
-再将`cli`移到lgdt前(因为lgdt前有用int), qemu-system-i386上该问题出现概率更小了.
+再将`cli`移到lgdt前(因为lgdt前有用int), qemu-system-i386还是存在该问题.
 
-最后将loader.s末尾的`jmp $`换成:
-```
-   PModePause:
-    hlt
-    jmp PModePause
-```
-
-qemu-system-i386上该问题出现概率更更小了. 理论上关了中断, qemu-system-i386 cpu应该不会重置才对.
+理论上关了中断, qemu-system-i386 cpu应该不会重置才对.
 
 > qemu-system-i386调试命令: `qemu-system-i386 -hda c.img -d cpu_reset,int -no-reboot`
 
@@ -87,4 +93,31 @@ qemu-system-i386上该问题出现概率更更小了. 理论上关了中断, qem
 1. 注释`times 60 dq 0`
 1. `lgdt`前加`cli`
 
-经上述两个步骤调整loader.s后, run.sh也能稳定停在一个界面, **怀疑是lgdt加载空selector(非第一个是0)导致异常**, 预计[qemu源码](https://github.com/qemu/qemu/blob/ac84b57b4d74606f7f83667a0606deef32b2049d/target/i386/tcg/translate.c#L6017)(这里仅是一个可能的代码位置)里有答案.
+经上述两个步骤调整loader.s后得到loader2.s, 执行run2.sh, 概率变小, **怀疑是lgdt加载空selector(非第一个是0)导致异常**, 预计[qemu源码](https://github.com/qemu/qemu/blob/ac84b57b4d74606f7f83667a0606deef32b2049d/target/i386/tcg/translate.c#L6017)(这里仅是一个可能的代码位置)里有答案.
+
+用上述调整后的loader2.s开发run_mem.sh, 发现还是会出现cpu reset, 将所有变量定义移到文件末尾形成run_mem_ok.sh, 问题消失, 因为bochs无法复现, qemu-system-i386无法调试而放弃排查.
+
+### 如何使用sata盘
+ref:
+- [How to emulate a SATA disk drive in QEMU](https://stackoverflow.com/questions/48351096/how-to-emulate-a-sata-disk-drive-in-qemu)
+- [QEMU/Options](https://wiki.gentoo.org/wiki/QEMU/Options#Hard_drive)
+
+```bash
+# qemu-system-i386 -M q35 -drive id=disk,file=c.img,if=none -device ahci,id=ahci -device ide-hd,drive=disk,bus=ahci.0
+```
+
+有资料说`When using i386 or x86_64 with Q35 machine type(-M q35), disk has been AHCI by default.`
+
+暂无法验证模拟sata是否已成功.
+
+### gdb调试
+```bash
+# qemu-system-i386 -hda hd.img -d cpu_reset,int -no-reboot -S -s -monitor tcp::4444,server,nowait
+# gdb -ex 'set tdesc filename ./target.xml' \
+    -ex 'set disassembly-flavor intel' \
+    -ex 'set disassemble-next-line on' \
+    -ex 'target remote :1234' \
+    -ex 'break *0x900' \
+    -ex 'c' \
+    -ex 'disassemble 0x900,0xbf0'
+```
