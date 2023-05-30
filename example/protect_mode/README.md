@@ -7,12 +7,12 @@ ref:
 - run1.sh: 来自网络, 用于对比发现loader.s的问题
 - run2.sh: 修正`times 60 dq 0` + `cli`后的run.sh
 
-	也会出现run.sh问题, 概率比run.sh小, 家里小米笔记本不容易出现, 但公司小主机上容易出现.
+	也会出现run.sh问题, 概率比run.sh小, 家里小米笔记本不容易出现, 但公司小主机上容易出现. 又在公司小主机上连试20把, 都正常, 真是诡异.
 
 	将所有变量定义移到文件末尾, 变成loader_ok.s, 连续执行run_ok.sh 20次, 问题未出现.
 - run_mem.sh: 带探测内存大小的loader, 有问题
 
-	用修正后的loader2.s+探测内存大小的代码, 结果出现run.sh问题, 挺频繁的.
+	用修正后的loader2.s+探测内存大小的代码, 结果出现run.sh问题, qemu-system-i386会突然退出, 挺频繁的.
 
 	通过`qemu-system-i386 -hda hd.img -d cpu_reset,int -no-reboot -S -s -monitor tcp::4444,server,nowait`+`gdb -ex 'set tdesc filename ./target.xml' -ex 'set disassembly-flavor intel' -ex 'set disassemble-next-line on' -ex 'target remote :1234' -ex 'c'`分析日志. 有时qemu-system-i386没输出异常, 突然就退出了; 有时会打印很多`check_exception old: 0xffffffff new 0x6`但退出, 对比这两种日志, 就是第二种多了很多的`check_exception old: 0xffffffff new 0x6`, 其他日志都一样. 对比第一种日志和loader_mem_ok.s的日志, 完全一样.
 
@@ -23,7 +23,9 @@ ref:
 ref:
 - [GGOS 诞生记](https://blog.gzti.me/posts/2022/2430028/index.html)
 
-在laoder.s 92行添加`jmp $`进行调试, 发现很诡异的现象, 会出现三种显示效果:
+首先, 直接调试(`qemu-system-i386 -hda c.img -d cpu_reset,int -no-reboot`)运行run.sh, qemu-system-i386容易直接退出, 打印`...\nTriple fault`
+
+在laoder.s 91行添加`jmp $`进行调试, 发现很诡异的现象, 会出现三种显示效果:
 - 正常, 小概率
 
 	[](misc/2023-05-26_14-14-42.png)
@@ -84,13 +86,9 @@ Next at t=82472612
 
 在16位实模式下的中断由BIOS处理，进入保护模式后，中断将交给中断描述符表IDT里规定的函数处理，在刚进入保护模式时IDTR寄存器的初始值为0，一旦发生中断（例如BIOS的时钟中断）就将导致CPU发生异常，所以需要首先屏蔽中断
 
-在loader.s `jmp loader_start`前加[`cli`](https://mp.weixin.qq.com/s/VGhpbZaeyVwq3Ghs2E6eEw), bochs测试未发现cpu重置现象, 但qemu-system-i386还是存在该问题.
-
-再将`cli`移到lgdt前(因为lgdt前有用int), qemu-system-i386还是存在该问题.
+在lgdt前(因为lgdt前有用int)添加[`cli`](https://mp.weixin.qq.com/s/VGhpbZaeyVwq3Ghs2E6eEw), qemu-system-i386还是存在该问题.
 
 理论上关了中断, qemu-system-i386 cpu应该不会重置才对.
-
-> qemu-system-i386调试命令: `qemu-system-i386 -hda c.img -d cpu_reset,int -no-reboot`
 
 逐步调整loader.s和loader1.s对比发现:
 1. 注释`times 60 dq 0`
